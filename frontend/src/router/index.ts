@@ -37,6 +37,16 @@ const router = createRouter({
       name: 'resources',
       component: () => import('@/views/ResourcesView.vue'),
     },
+    {
+      path: '/analysis',
+      name: 'analysis',
+      component: () => import('@/views/AnalysisView.vue'),
+    },
+    {
+      path: '/timer',
+      name: 'timer',
+      component: () => import('@/views/TimerView.vue'),
+    },
   ],
 })
 

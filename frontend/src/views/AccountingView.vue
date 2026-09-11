@@ -6,10 +6,13 @@ import {
   getSummary,
   getYearSeries,
   exportUrl,
+  getSettings,
+  saveSettings,
   type Kind,
   type Transaction,
   type Summary,
   type YearSeries,
+  type Balance,
 } from '@/api/accounting'
 import TransactionForm from '@/components/accounting/TransactionForm.vue'
 import TransactionList from '@/components/accounting/TransactionList.vue'
@@ -45,6 +48,11 @@ const yearSeries = ref<YearSeries | null>(null)
 const activeKind = ref<Kind | ''>('')
 const loading = ref(false)
 
+const balance = ref<Balance | null>(null)
+const depositInput = ref<number>(0)
+const savingInput = ref<number>(0)
+const savingSettings = ref(false)
+
 const kindLabelMap: Record<string, string> = {
   expense: '支出',
   income: '收入',
@@ -64,18 +72,34 @@ async function load() {
   try {
     const q = query.value
     const yearStr = mode.value === 'year' ? q.year! : String(curYear.value)
-    const [list, sum, series] = await Promise.all([
+    const [list, sum, series, bal] = await Promise.all([
       listTransactions(q),
       getSummary(q),
       mode.value === 'year' ? getYearSeries(yearStr) : Promise.resolve(null),
+      getSettings(),
     ])
     transactions.value = list
     summary.value = sum
     yearSeries.value = series
+    balance.value = bal
+    depositInput.value = bal.deposit
+    savingInput.value = bal.saving
   } catch (e) {
     ElMessage.error('加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+async function saveBalance() {
+  savingSettings.value = true
+  try {
+    balance.value = await saveSettings(depositInput.value ?? 0, savingInput.value ?? 0)
+    ElMessage.success('已保存')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    savingSettings.value = false
   }
 }
 
@@ -176,12 +200,40 @@ onMounted(load)
             <span class="ov-value">¥ {{ (summary?.totals.income ?? 0).toFixed(2) }}</span>
           </div>
           <div class="ov-item">
-            <span class="ov-label">净支出</span>
-            <span class="ov-value">¥ {{ (summary?.net_expense ?? 0).toFixed(2) }}</span>
+            <span class="ov-label">未报销费用</span>
+            <span class="ov-value">¥ {{ (summary?.unreimbursed ?? 0).toFixed(2) }}</span>
+          </div>
+          <div class="ov-item">
+            <span class="ov-label">已报销到账</span>
+            <span class="ov-value">¥ {{ (summary?.settled ?? 0).toFixed(2) }}</span>
           </div>
           <div class="ov-item">
             <span class="ov-label">净收入</span>
-            <span class="ov-value">¥ {{ (((summary?.totals.income ?? 0) - (summary?.net_expense ?? 0))).toFixed(2) }}</span>
+            <span class="ov-value">¥ {{ (summary?.net_income ?? 0).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <div class="asset-card">
+          <div class="asset-row">
+            <label class="asset-label">存款</label>
+            <input v-model.number="depositInput" class="field" type="number" min="0" step="0.01" placeholder="0.00" />
+            <label class="asset-label">储蓄</label>
+            <input v-model.number="savingInput" class="field" type="number" min="0" step="0.01" placeholder="0.00" />
+            <button class="btn-asset-save" :disabled="savingSettings" @click="saveBalance">
+              {{ savingSettings ? '保存中…' : '保存' }}
+            </button>
+          </div>
+          <div class="asset-row asset-hint-row">
+            <span class="asset-hint">存款/储蓄 = 启用记账前的账户期初余额（余额 = 期初 + 累计净收入 − 未收回垫付）</span>
+          </div>
+          <div class="asset-row asset-total">
+            <span class="asset-label">余额</span>
+            <span class="asset-value" :class="(balance?.balance ?? 0) >= 0 ? 'pos' : 'neg'">
+              ¥ {{ (balance?.balance ?? 0).toFixed(2) }}
+            </span>
+            <span class="asset-hint">
+              = 存款 + 储蓄 + 累计净收入({{ (balance?.net_income ?? 0).toFixed(2) }}) − 未收回垫付({{ (balance?.outstanding ?? 0).toFixed(2) }})
+            </span>
           </div>
         </div>
 

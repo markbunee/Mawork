@@ -1,0 +1,116 @@
+/* 文章模块 ArticlesView */
+
+/* ==================== 文章模块 ==================== */
+.articles {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+}
+
+.articles-list {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.article-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.article-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-soft);
+  transition: background 0.12s, color 0.12s;
+}
+
+.article-item:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.article-item.active {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.article-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.article-item.active .article-dot {
+  background: var(--accent);
+}
+
+.article-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.del-btn {
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.article-item:hover .del-btn {
+  opacity: 1;
+}
+
+.del-btn:hover {
+  color: #E0705A;
+}
+
+.articles-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.title-input {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-family: var(--font-serif);
+  letter-spacing: 1px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  outline: none;
+  width: 300px;
+}
+
+.title-input:focus {
+  border-color: var(--accent);
+}

@@ -1,13 +1,13 @@
-"""日程任务路由。"""
+"""日程任务路由：一张极简 Excel 网格表的增删改查。"""
 
 import io
 from datetime import date as date_cls
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from ..models.planpool import PROGRESS_OPTIONS, PROGRESS_TODO
+from ..models.planpool import DEFAULT_COMPLETION, DEFAULT_PROGRESS, PROGRESS_OPTIONS
 from ..services import planpool
 
 router = APIRouter(prefix="/api/planpool", tags=["planpool"])
@@ -18,7 +18,11 @@ router = APIRouter(prefix="/api/planpool", tags=["planpool"])
 # ---------------------------------------------------------------------------
 @router.get("/meta")
 def meta():
-    return {"progress_options": PROGRESS_OPTIONS, "default_progress": PROGRESS_TODO}
+    return {
+        "progress_options": PROGRESS_OPTIONS,
+        "default_progress": DEFAULT_PROGRESS,
+        "default_completion": DEFAULT_COMPLETION,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -26,8 +30,9 @@ def meta():
 # ---------------------------------------------------------------------------
 class TaskIn(BaseModel):
     level1: str = ""
-    level2: str = ""
-    progress: str = PROGRESS_TODO
+    title: str = ""
+    progress: str = DEFAULT_PROGRESS
+    completion: int = DEFAULT_COMPLETION
     note: str = ""
     start_date: str = ""
     end_date: str = ""
@@ -50,7 +55,7 @@ def _validate_dates(start_date: str, end_date: str):
 def create_task(payload: TaskIn):
     _validate_dates(payload.start_date, payload.end_date)
     return planpool.create_task(
-        payload.level1, payload.level2, payload.progress,
+        payload.level1, payload.title, payload.progress, payload.completion,
         payload.note, payload.start_date, payload.end_date,
     )
 
@@ -64,7 +69,7 @@ def list_tasks(month: str | None = None):
 def update_task(tid: int, payload: TaskIn):
     _validate_dates(payload.start_date, payload.end_date)
     tx = planpool.update_task(
-        tid, payload.level1, payload.level2, payload.progress,
+        tid, payload.level1, payload.title, payload.progress, payload.completion,
         payload.note, payload.start_date, payload.end_date,
     )
     if tx is None:
@@ -77,24 +82,6 @@ def delete_task(tid: int):
     if not planpool.delete_task(tid):
         raise HTTPException(status_code=404, detail="任务不存在")
     return {"ok": True}
-
-
-@router.post("/tasks/{tid}/checkin")
-def checkin(tid: int, date: str):
-    """为任务在某天打卡（date=YYYY-MM-DD）。"""
-    tx = planpool.checkin(tid, date)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="任务不存在")
-    return tx
-
-
-@router.delete("/tasks/{tid}/checkin")
-def uncheckin(tid: int, date: str):
-    """取消某天打卡。"""
-    tx = planpool.uncheckin(tid, date)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="任务不存在")
-    return tx
 
 
 # ---------------------------------------------------------------------------

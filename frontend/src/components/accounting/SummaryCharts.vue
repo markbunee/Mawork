@@ -23,7 +23,7 @@ const COLORS = ['#E0705A', '#67C23A', '#4A90D9', '#F5A623', '#9B59B6', '#E74C3C'
 const TREND_COLORS = {
   expense: '#E0705A',      // 支出 红
   income: '#67C23A',       // 收入 绿
-  net_expense: '#4A90D9',  // 净支出 蓝
+  pending: '#4A90D9',      // 未报销费用 蓝
   net_income: '#F5A623',   // 净收入 橙
 }
 
@@ -76,7 +76,7 @@ function renderTrend() {
   const lines = [
     { name: '支出', key: 'expense', color: TREND_COLORS.expense },
     { name: '收入', key: 'income', color: TREND_COLORS.income },
-    { name: '净支出', key: 'net_expense', color: TREND_COLORS.net_expense },
+    { name: '未报销费用', key: 'pending', color: TREND_COLORS.pending },
     { name: '净收入', key: 'net_income', color: TREND_COLORS.net_income },
   ]
 

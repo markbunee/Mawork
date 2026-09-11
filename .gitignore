@@ -1,3 +1,6 @@
+# 个人工作区数据（不公开上传）
+workspaces/
+
 # Python
 __pycache__/
 *.pyc
@@ -8,9 +11,6 @@ venv/
 node_modules/
 dist/
 .vite/
-
-# 数据库（个人数据，不建议公开）
-workspaces/*.db
 
 # 系统与 IDE
 .DS_Store

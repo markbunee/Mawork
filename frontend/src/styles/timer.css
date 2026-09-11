@@ -1,0 +1,298 @@
+/* 计时模块 TimerView / TimerCard / TimerForm / TimerStats */
+
+.timer {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---------- 工具栏 ---------- */
+.tm-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tm-create-btn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.tm-create-btn:hover {
+  opacity: 0.9;
+}
+
+.tm-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* ---------- 卡片网格 ---------- */
+.tm-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.tm-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-faint);
+  padding: 40px 16px;
+  font-size: 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+.tm-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tm-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tm-type {
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+/* 各类型用深浅区分，不引入彩色 */
+.tm-type.countdown { background: #efe7da; color: #8a6d3b; }
+.tm-type.countup { background: #e7ece6; color: #3f6b45; }
+.tm-type.countdown_days { background: #e6e9ef; color: #3b507a; }
+.tm-type.countup_days { background: #efe6ec; color: #7a3b62; }
+
+.tm-title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+}
+.tm-time {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.tm-sub {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.tm-display.running .tm-time {
+  color: var(--accent);
+}
+
+.tm-note {
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: #faf8f4;
+  border-radius: 8px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 72px;
+  overflow: auto;
+}
+
+.tm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+/* ---------- 通用按钮 ---------- */
+.tm-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tm-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tm-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.tm-btn.primary:hover {
+  opacity: 0.9;
+  color: #fff;
+}
+.tm-btn.warn {
+  border-color: #c79a3b;
+  color: #8a6d3b;
+}
+.tm-btn.danger:hover {
+  border-color: #b4553f;
+  color: #b4553f;
+}
+
+/* ---------- 统计区 ---------- */
+.tm-stats {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 22px;
+}
+
+.tm-stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.tm-stats-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tm-gran {
+  display: flex;
+  gap: 4px;
+}
+.tm-gran-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tm-gran-btn:hover {
+  color: var(--ink);
+}
+.tm-gran-btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.tm-total {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+.tm-total b {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0 2px;
+}
+
+.tm-chart {
+  width: 100%;
+  height: 260px;
+}
+
+/* 任务明细表 */
+.tm-task-table {
+  margin-top: 12px;
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tm-tt-head,
+.tm-tt-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 70px;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 13px;
+}
+.tm-tt-head {
+  background: #f4f2ed;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+.tm-tt-head span:not(:first-child),
+.tm-tt-row span:not(:first-child) {
+  text-align: right;
+}
+.tm-tt-row {
+  border-top: 1px solid var(--grid);
+  color: var(--ink);
+}
+.tm-tt-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tm-tt-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
+/* ---------- 表单 ---------- */
+.tm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tm-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.field {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.field:focus {
+  border-color: var(--accent);
+}

@@ -1,0 +1,475 @@
+/* 日程任务模块 PlanpoolView/TaskTable（含备注抽屉 .pp-note-*） */
+
+/* ==================== 日程任务模块：极简 Excel 网格 ==================== */
+.planpool {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.pp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pp-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.stat-total {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* 状态统计：不用彩色，靠深浅与字重区分 */
+.stat-item.done { color: var(--ink); font-weight: 600; }
+.stat-item.doing { color: var(--ink-soft); }
+.stat-item.todo { color: var(--ink-faint); }
+
+/* 月份标签 */
+.pp-months {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pp-month {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 14px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pp-month:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.pp-month.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  font-weight: 600;
+}
+
+.pp-year {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* 网格：细线、无斑马纹、无状态配色 */
+.pp-excel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.pp-table {
+  width: 100%;
+  min-width: 1224px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.pp-table th,
+.pp-table td {
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  padding: 0;
+}
+
+.pp-table th:last-child,
+.pp-table td:last-child {
+  border-right: none;
+}
+
+/* 列宽：1 行号 / 2 一级计划 / 3 任务 / 4 状态 / 5 完成度 / 6 备注 / 7 开始 / 8 结束 / 9 操作 */
+.pp-table th:nth-child(1), .pp-table td:nth-child(1) { width: 44px; min-width: 44px; }
+.pp-table th:nth-child(2), .pp-table td:nth-child(2) { width: 160px; min-width: 160px; }
+.pp-table th:nth-child(3), .pp-table td:nth-child(3) { min-width: 240px; }
+.pp-table th:nth-child(4), .pp-table td:nth-child(4) { width: 112px; min-width: 112px; }
+.pp-table th:nth-child(5), .pp-table td:nth-child(5) { width: 132px; min-width: 132px; }
+.pp-table th:nth-child(6), .pp-table td:nth-child(6) { min-width: 220px; }
+.pp-table th:nth-child(7), .pp-table td:nth-child(7) { width: 132px; min-width: 132px; }
+.pp-table th:nth-child(8), .pp-table td:nth-child(8) { width: 132px; min-width: 132px; }
+.pp-table th:nth-child(9), .pp-table td:nth-child(9) { width: 52px; min-width: 52px; }
+
+/* 行号列：横向滚动时固定在最左侧，与纵向固定的表头一起形成十字固定 */
+.pp-table th.pp-rowhead,
+.pp-table td.pp-rowhead {
+  position: sticky;
+  left: 0;
+}
+
+.pp-table thead th.pp-rowhead { z-index: 4; }
+.pp-table tbody td.pp-rowhead { z-index: 1; }
+
+/* 列字母行 */
+.pp-letter-row th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  background: #f4f2ed;
+  text-align: center;
+  user-select: none;
+}
+
+/* 表头行 */
+.pp-head-row th {
+  position: sticky;
+  top: 20px;
+  z-index: 2;
+  height: 34px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #f4f2ed;
+  padding: 0 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 一级计划：分类列，比任务名略淡以区分层级 */
+.pp-cell-level1 {
+  color: var(--ink-soft);
+}
+
+/* 行号列 */
+.pp-rowhead {
+  background: #f4f2ed;
+  color: var(--ink-faint);
+  font-size: 11px;
+  text-align: center;
+  user-select: none;
+}
+
+.pp-table tbody .pp-rowhead {
+  height: 38px;
+}
+
+/* 单元格 */
+.pp-cell {
+  height: 38px;
+  padding: 0 10px;
+  color: var(--ink);
+  cursor: cell;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-cell:hover {
+  background: #faf8f4;
+}
+
+.pp-cell-progress,
+.pp-cell-action {
+  cursor: default;
+  text-align: center;
+  padding: 0 6px;
+}
+
+.pp-input {
+  border: 1px solid var(--accent);
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 4px 8px;
+  border-radius: 3px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  height: 28px;
+}
+
+.pp-input-num {
+  text-align: center;
+}
+
+/* 状态下拉：纯文本，不配色 */
+.pp-select {
+  font-size: 13px;
+  font-family: inherit;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  appearance: none;
+}
+
+.pp-select:hover {
+  border-color: var(--line);
+  background: #fff;
+}
+
+/* 完成度：单色细条，不按状态分色 */
+.pp-cell-completion {
+  padding: 0 12px;
+  cursor: cell;
+}
+
+.pp-completion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-completion-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: #e7e3db;
+  overflow: hidden;
+}
+
+.pp-completion-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ink-soft);
+  transition: width 0.2s;
+}
+
+.pp-completion-text {
+  font-size: 12px;
+  color: var(--ink-soft);
+  min-width: 34px;
+  text-align: right;
+}
+
+.pp-del {
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.pp-del:hover {
+  color: #b4553f;
+  background: #fbf1ee;
+}
+
+.pp-add-ok:hover {
+  color: #3f6b45;
+  background: #f0f5f1;
+}
+
+/* 新增行 */
+.pp-add-row .pp-cell {
+  color: var(--ink-faint);
+}
+
+.pp-add-row .pp-cell:hover {
+  background: #faf8f4;
+  color: var(--ink-soft);
+}
+
+.pp-empty {
+  text-align: center;
+  color: var(--ink-faint);
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+/* 备注列：单击进右侧抽屉编辑（大篇幅备注 / 计划文本） */
+.pp-cell-note {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.pp-cell-note:hover {
+  color: var(--ink);
+}
+
+.pp-note-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* 备注详情抽屉 */
+.pp-note-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(18, 15, 10, 0.25);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pp-note-drawer {
+  width: min(560px, 94vw);
+  height: 100%;
+  background: var(--surface);
+  box-shadow: -14px 0 34px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  animation: pp-drawer-in 0.18s ease-out;
+}
+
+@keyframes pp-drawer-in {
+  from {
+    transform: translateX(46px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.pp-note-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pp-note-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.pp-note-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.pp-note-meta {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.pp-note-close {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 14px;
+  line-height: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pp-note-close:hover {
+  color: var(--ink);
+  background: #f3f0ea;
+  border-color: var(--line);
+}
+
+.pp-note-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 22px;
+}
+
+.pp-note-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+.pp-note-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  resize: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  tab-size: 2;
+}
+
+.pp-note-textarea:focus {
+  border-color: var(--accent);
+}
+
+.pp-note-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.pp-note-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-right: auto;
+}
+
+.pp-note-save {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 7px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pp-note-save:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

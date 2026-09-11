@@ -10,7 +10,9 @@ WORKSPACES_DIR = BASE_DIR / "workspaces"
 
 # SQLite 数据库文件
 ACCOUNTING_DB = WORKSPACES_DIR / "accounting.db"   # 记账
-PLANPOOL_DB = WORKSPACES_DIR / "planpool.db"       # 日程任务
+PLANPOOL_DB = WORKSPACES_DIR / "planpool.db"       # 日程任务 + 日历文本格
+DAILY_DB = WORKSPACES_DIR / "daily.db"             # 日报（唯一真源，取代 {year}/daily.md）
+TIMER_DB = WORKSPACES_DIR / "timer.db"             # 计时（倒计时/正计时/倒数日/正数日 + 耗时统计）
 
 # 兼容旧引用：config.DB_PATH 仍指向记账库
 DB_PATH = ACCOUNTING_DB

@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
-from .routers import accounting, articles, daily, planpool, resources
+from .routers import accounting, ai_analysis, articles, calday, daily, planpool, resources, timer
 
 app = FastAPI(title="MaWork API")
 
@@ -40,10 +40,13 @@ def health():
 
 
 app.include_router(daily.router)
+app.include_router(ai_analysis.router)
 app.include_router(accounting.router)
 app.include_router(planpool.router)
+app.include_router(calday.router)
 app.include_router(articles.router)
 app.include_router(resources.router)
+app.include_router(timer.router)
 
 
 if __name__ == "__main__":

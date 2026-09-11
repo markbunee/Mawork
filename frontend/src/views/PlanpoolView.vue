@@ -6,15 +6,14 @@ import TaskTable from '@/components/planpool/TaskTable.vue'
 
 const now = new Date()
 const curYear = ref(now.getFullYear())
-// 月份标签："全部" + 当前年 12 个月
 const months = Array.from({ length: 12 }, (_, i) => i + 1)
-const selectedMonth = ref<number | null>(null) // null = 全部
+// 默认界面停在当前月
+const selectedMonth = ref<number>(now.getMonth() + 1)
 
 const tasks = ref<Task[]>([])
-const stats = ref<Stats>({ total: 0, done: 0, todo: 0, doing: 0, on_hold: 0 })
+const stats = ref<Stats>({ total: 0, done: 0, todo: 0, doing: 0 })
 
-function period(): string | undefined {
-  if (selectedMonth.value === null) return undefined
+function period(): string {
   return `${curYear.value}-${String(selectedMonth.value).padStart(2, '0')}`
 }
 
@@ -24,12 +23,12 @@ async function load() {
     const [t, s] = await Promise.all([listTasks(month), getStats(month)])
     tasks.value = t
     stats.value = s
-  } catch (e) {
+  } catch {
     ElMessage.error('加载失败')
   }
 }
 
-function selectMonth(m: number | null) {
+function selectMonth(m: number) {
   selectedMonth.value = m
   load()
 }
@@ -46,19 +45,15 @@ onMounted(load)
     <div class="pp-toolbar">
       <div class="pp-stats">
         <span class="stat-total">共 {{ stats.total }} 项</span>
-        <span class="stat-item done">完成 {{ stats.done }}</span>
         <span class="stat-item todo">未完成 {{ stats.todo }}</span>
         <span class="stat-item doing">进行中 {{ stats.doing }}</span>
-        <span class="stat-item hold">搁置 {{ stats.on_hold }}</span>
+        <span class="stat-item done">已完成 {{ stats.done }}</span>
       </div>
       <button class="btn-export" @click="doExport">导出 Excel</button>
     </div>
 
     <!-- 月份标签 -->
     <div class="pp-months">
-      <button class="pp-month" :class="{ active: selectedMonth === null }" @click="selectMonth(null)">
-        全部
-      </button>
       <button
         v-for="m in months"
         :key="m"

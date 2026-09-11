@@ -70,14 +70,43 @@ def delete_transaction(tid: int):
 
 
 # ---------------------------------------------------------------------------
-# 报销转抵
+# 报销事件（事件化：每笔到账一条记录，支持部分/多次报销）
 # ---------------------------------------------------------------------------
+class ReimburseEventIn(BaseModel):
+    amount: float = Field(gt=0)
+    event_date: str  # YYYY-MM-DD 到账日期
+    note: str = ""
+
+
+@router.post("/transactions/{tid}/reimburse-events")
+def create_reimburse_event(tid: int, payload: ReimburseEventIn):
+    try:
+        return accounting.create_reimburse_event(
+            tid, payload.amount, payload.event_date, payload.note
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/transactions/{tid}/reimburse-events")
+def list_reimburse_events(tid: int):
+    return accounting.list_reimburse_events(tid)
+
+
+@router.delete("/reimburse-events/{eid}")
+def delete_reimburse_event(eid: int):
+    if not accounting.delete_reimburse_event(eid):
+        raise HTTPException(status_code=404, detail="报销事件不存在")
+    return {"ok": True}
+
+
 @router.post("/transactions/{tid}/settle")
 def settle_reimbursement(tid: int):
-    tx = accounting.settle_reimbursement(tid)
-    if tx is None:
-        raise HTTPException(status_code=400, detail="仅「待报销」可转为「已报销」")
-    return tx
+    """快捷：按剩余金额全额报销（到账日期为今天）。"""
+    ev = accounting.settle_reimbursement(tid)
+    if ev is None:
+        raise HTTPException(status_code=400, detail="该账目不可报销或已全部报销")
+    return ev
 
 
 # ---------------------------------------------------------------------------
@@ -96,6 +125,22 @@ def series(year: str):
 @router.get("/daily")
 def daily(year: str, month: str | None = None):
     return accounting.daily_net(year, month=month)
+
+
+class SettingsIn(BaseModel):
+    deposit: float = 0
+    saving: float = 0
+
+
+@router.get("/settings")
+def get_settings():
+    return accounting.balance()
+
+
+@router.put("/settings")
+def save_settings(payload: SettingsIn):
+    accounting.save_settings(payload.deposit, payload.saving)
+    return accounting.balance()
 
 
 @router.get("/export")

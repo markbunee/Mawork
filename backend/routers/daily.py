@@ -1,122 +1,93 @@
-"""日报路由：读写字盘上的 Markdown 日报文件。"""
+"""日报路由：日报存储于 daily.db（唯一真源），不再读写字盘 Markdown。
+
+- 正文以段落（sections）形式返回，供前端分段编辑；
+- 日历任务行（calendar_lines）作为独立来源随日报返回，用于页面顶部展示；
+- 保存时正文「三、明日工作计划」自动落到次日日历。
+"""
 
 import re
-from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from .. import config
+from ..models.daily import DEFAULT_SECTIONS
+from ..services import calday, daily
 
 router = APIRouter(prefix="/api/daily", tags=["daily"])
 
-# 日报标题正则：## 日报_马炫轩：2026.08.25
-HEADING_RE = re.compile(r"^##\s*日报_.*?[：:]\s*(\d{4}\.\d{2}\.\d{2})\s*$")
-# 一级标题正则：月份/复盘分组标题
-MONTH_RE = re.compile(r"^#\s+(.+?)\s*$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+YEAR_RE = re.compile(r"^\d{4}$")
 
 
-def daily_file(year: str) -> Path:
-    return config.WORKSPACES_DIR / year / "daily.md"
+def _check_year(year: str) -> int:
+    if not YEAR_RE.match(year):
+        raise HTTPException(status_code=422, detail="年份格式应为 YYYY")
+    return int(year)
 
 
-def split_daily_tree(text: str) -> list[dict]:
-    """按一级标题 + 二级标题解析为分组树。
-
-    结构：
-    # 06月
-    ## 日报_马炫轩:2026.06.07
-    ...
-    # 06月工作复盘&07月工作指导
-    正文（无日期）
-    ...
-    返回：[{title, dates: [date,...]}]，title 为一级标题文本。
-    """
-    groups: list[dict] = []
-    current_group = None
-    current_date = None
-
-    for line in text.splitlines():
-        s = line.strip()
-        m1 = MONTH_RE.match(s)
-        if m1:
-            current_group = {"title": m1.group(1).strip(), "dates": []}
-            groups.append(current_group)
-            current_date = None
-            continue
-        m2 = HEADING_RE.match(s)
-        if m2 and current_group is not None:
-            date = m2.group(1)
-            if date not in current_group["dates"]:
-                current_group["dates"].append(date)
-            current_date = date
-            continue
-
-    return groups
-
-
-def split_daily(text: str) -> list[dict]:
-    """按 ## 标题切块，返回 [{date, heading, body}]。"""
-    lines = text.splitlines()
-    blocks: list[dict] = []
-    current = None
-    for line in lines:
-        m = HEADING_RE.match(line.strip())
-        if m:
-            if current is not None:
-                blocks.append(current)
-            current = {"date": m.group(1), "heading": line.strip(), "body": []}
-        else:
-            if current is not None:
-                current["body"].append(line)
-    if current is not None:
-        blocks.append(current)
-
-    for b in blocks:
-        while b["body"] and not b["body"][0].strip():
-            b["body"].pop(0)
-        while b["body"] and not b["body"][-1].strip():
-            b["body"].pop()
-        b["body"] = "\n".join(b["body"])
-    return blocks
-
-
-def render_block(heading: str, body: str) -> str:
-    body = body.strip("\n")
-    return f"{heading}\n\n{body}\n" if body else f"{heading}\n\n"
+def _check_date(year: str, date: str) -> None:
+    if not DATE_RE.match(date):
+        raise HTTPException(status_code=422, detail="日期格式应为 YYYY-MM-DD")
+    if not date.startswith(year + "-"):
+        raise HTTPException(status_code=422, detail="日期不属于该年份")
 
 
 @router.get("/years")
 def list_years():
-    """列出含日报文件的年份文件夹。"""
-    if not config.WORKSPACES_DIR.exists():
-        return {"years": []}
-    years = []
-    for d in sorted(config.WORKSPACES_DIR.iterdir(), reverse=True):
-        if d.is_dir() and (d / "daily.md").exists():
-            years.append(d.name)
-    return {"years": years}
+    """列出已有日报的年份。"""
+    return {"years": daily.list_years()}
+
+
+@router.get("/export")
+def export_year(year: str = Query(...)):
+    """导出某年全部日报为 Markdown（含日历任务注入）。"""
+    y = _check_year(year)
+    content = daily.export_year(y)
+    if not content:
+        raise HTTPException(status_code=404, detail="该年暂无日报")
+    filename = f"daily_{year}.md"
+    return Response(
+        content=content,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{year}")
 def list_daily(year: str):
-    """返回按一级标题分组的日报树。"""
-    f = daily_file(year)
-    if not f.exists():
-        return {"year": year, "groups": []}
-    groups = split_daily_tree(f.read_text(encoding="utf-8"))
-    return {"year": year, "groups": groups}
+    """按月份分组列出某年日报的日期树。"""
+    y = _check_year(year)
+    return {"year": year, "groups": daily.list_groups(y)}
 
 
 @router.get("/{year}/{date}")
 def get_daily(year: str, date: str):
-    f = daily_file(year)
-    if not f.exists():
-        raise HTTPException(status_code=404, detail="日报文件不存在")
-    for b in split_daily(f.read_text(encoding="utf-8")):
-        if b["date"] == date:
-            return {"date": date, "heading": b["heading"], "body": b["body"]}
-    raise HTTPException(status_code=404, detail="该日期无日报")
+    """返回某天日报：正文、段落与当日日历任务（日历任务仅作展示注入）。"""
+    _check_year(year)
+    _check_date(year, date)
+    entry = daily.get_entry(date)
+    cal_tasks = calday.get_tasks(date)
+    if entry is None:
+        # 不存在也返回默认三段模板，前端可直接开写
+        return {
+            "date": date,
+            "year": year,
+            "exists": False,
+            "heading": "",
+            "body": "",
+            "sections": [dict(s) for s in DEFAULT_SECTIONS],
+            "calTasks": cal_tasks,
+        }
+    return {
+        "date": entry["date"],
+        "year": year,
+        "exists": True,
+        "heading": entry["heading"],
+        "body": entry["body"],
+        "sections": entry["sections"],
+        "calTasks": cal_tasks,
+    }
 
 
 class DailyPayload(BaseModel):
@@ -125,25 +96,16 @@ class DailyPayload(BaseModel):
 
 @router.put("/{year}/{date}")
 def upsert_daily(year: str, date: str, payload: DailyPayload):
-    f = daily_file(year)
-    f.parent.mkdir(parents=True, exist_ok=True)
-
-    heading = f"## 日报_{config.AUTHOR}：{date}"
-    new_block = render_block(heading, payload.body)
-
-    if f.exists():
-        text = f.read_text(encoding="utf-8")
-        blocks = split_daily(text)
-        if any(b["date"] == date for b in blocks):
-            out = [
-                new_block if b["date"] == date else render_block(b["heading"], b["body"])
-                for b in blocks
-            ]
-            result = "\n".join(x.strip("\n") for x in out if x.strip("\n")) + "\n"
-            f.write_text(result, encoding="utf-8")
-        else:
-            f.write_text(text.rstrip("\n") + "\n\n" + new_block, encoding="utf-8")
-    else:
-        f.write_text(new_block, encoding="utf-8")
-
-    return {"date": date, "ok": True}
+    """保存某天日报；正文为整篇文本，后端负责切段与触发次日日历同步。"""
+    _check_year(year)
+    _check_date(year, date)
+    try:
+        result = daily.upsert_entry(date, payload.body)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+    return {
+        "date": result["date"],
+        "ok": True,
+        "plan_synced": result["plan_synced"],
+        "heading": f"## 日报_{config.AUTHOR}：{date.replace('-', '.')}",
+    }

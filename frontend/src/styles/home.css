@@ -1,0 +1,401 @@
+/* 首页 HomeView：可填写的日历 */
+
+/* ==================== 首页模块：可填写的日历 ==================== */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-calendar {
+  --cal-weekplan-w: 132px; /* 周计划列宽度（周一左边） */
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cal-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+
+.cal-nav {
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+}
+
+.cal-nav:hover {
+  color: var(--ink);
+}
+
+.cal-today {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cal-today:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.cal-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-left: 12px;
+}
+
+.cal-synced {
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: var(--cal-weekplan-w) repeat(7, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+
+.cal-weekday {
+  text-align: center;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--bg);
+}
+
+.cal-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-week {
+  display: grid;
+  grid-template-columns: var(--cal-weekplan-w) repeat(7, 1fr);
+  align-items: stretch;
+}
+
+/* ---- 月度计划：日历上方的整块自由文本 ---- */
+.cal-monthplan {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px 18px 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cal-monthplan-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cal-monthplan-title {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+}
+
+.cal-monthplan-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.cal-monthplan-input {
+  width: 100%;
+  min-height: 104px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+
+.cal-monthplan-input:focus {
+  border-color: var(--accent);
+}
+
+.cal-monthplan-input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* ---- 周计划：周一左边一列 ---- */
+.cal-weekplan-head {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.cal-weekplan {
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  padding: 6px 8px 8px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg);
+}
+
+.cal-weekplan-label {
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
+
+.cal-weekplan-input {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.cal-weekplan-input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* ---- 单个日期格：一块可直接输入的文本方格 ---- */
+.cal-cell {
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  padding: 6px 8px 8px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 日期格现在排在第 2~8 个（第 1 个是周计划列），最后一列去掉右边框 */
+.cal-cell:nth-child(8n) {
+  border-right: none;
+}
+
+.cal-cell.out-month {
+  background: #faf9f6;
+}
+
+.cal-cell.out-month .cal-daynum {
+  color: var(--ink-faint);
+}
+
+.cal-cell.today {
+  background: #fdfaf3;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.cal-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cal-daynum {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cal-cell.today .cal-daynum {
+  color: var(--accent);
+}
+
+.cal-net {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cal-net.pos {
+  color: #3f6b45;
+}
+
+.cal-net.neg {
+  color: #b4553f;
+}
+
+.cal-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cal-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  position: relative;
+  padding: 1px 0;
+  border-radius: 4px;
+}
+
+.cal-gutter {
+  flex-shrink: 0;
+  width: 15px;
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+/* 文本行：空心圆点，点击刷成任务 */
+.cal-dot {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid #b3aba0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+
+.cal-dot:hover {
+  border-color: var(--accent);
+  transform: scale(1.2);
+}
+
+/* 任务行：方框，点击切换完成 / 未完成 */
+.cal-check {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #8d857a;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cal-check:hover {
+  border-color: var(--accent);
+}
+
+.cal-line.is-task .cal-check {
+  border-color: var(--ink-soft);
+}
+
+.cal-line.is-done .cal-check {
+  background: #3f5c45;
+  border-color: #3f5c45;
+  position: relative;
+}
+
+.cal-line.is-done .cal-check::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0.5px;
+  width: 3px;
+  height: 6px;
+  border: solid #fff;
+  border-width: 0 1.6px 1.6px 0;
+  transform: rotate(42deg);
+}
+
+/* 行文本：自动增高的输入框 */
+.cal-text {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  padding: 1px 0;
+  min-height: 21px;
+}
+
+.cal-text::placeholder {
+  color: #b8b1a6;
+}
+
+.cal-line.is-task .cal-text {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.cal-line.is-done .cal-text {
+  text-decoration: line-through;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+/* 任务行转回普通文本 */
+.cal-untask {
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.cal-line:hover .cal-untask {
+  opacity: 1;
+}
+
+.cal-untask:hover {
+  color: var(--accent);
+}
+
+/* 新增行 */
+.cal-add {
+  font-size: 12px;
+  color: #c2bbaf;
+  cursor: pointer;
+  padding: 0 0 0 20px;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+
+.cal-add:hover {
+  color: var(--accent);
+}
