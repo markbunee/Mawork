@@ -1,0 +1,363 @@
+/* 用户管理页样式（管理员专用） */
+
+.users {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.users-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.users-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.users-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.users-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* —— 卡片 —— */
+.u-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.u-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.u-card-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.u-card-head .u-card-title {
+  margin-bottom: 0;
+}
+
+/* —— 分段控件 —— */
+.u-seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg);
+  border-radius: 999px;
+}
+
+.u-seg button {
+  padding: 5px 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.u-seg button.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(27, 25, 23, 0.08);
+}
+
+/* —— 列表行 —— */
+.u-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.u-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.u-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.u-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.u-tag {
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.u-tag.reset {
+  background: #fbeee9;
+  color: #b8503a;
+}
+
+.u-tag.new {
+  background: #eaf1e9;
+  color: #4f7a45;
+}
+
+.u-tag.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+}
+
+.u-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.u-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.u-empty {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* —— 按钮 —— */
+.u-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.u-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.u-btn.primary {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.u-btn.primary:hover:not(:disabled) {
+  opacity: 0.9;
+  color: #fff;
+}
+
+.u-btn.danger {
+  color: #b8503a;
+  border-color: #eebbb2;
+}
+
+.u-btn.danger:hover:not(:disabled) {
+  background: #fbeee9;
+  border-color: #b8503a;
+  color: #b8503a;
+}
+
+.u-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* —— 建号表单 —— */
+.u-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.u-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.u-field span {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.u-field input,
+.u-field select {
+  height: 38px;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: none;
+}
+
+.u-field input:focus,
+.u-field select:focus {
+  border-color: var(--accent);
+}
+
+/* —— 临时密码弹窗 —— */
+.u-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(27, 25, 23, 0.42);
+}
+
+.u-dialog {
+  width: 380px;
+  max-width: 100%;
+  padding: 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 50px rgba(27, 25, 23, 0.22);
+}
+
+.u-pwd {
+  margin: 10px 0;
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  user-select: all;
+}
+
+.u-warn {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #b8503a;
+}
+
+/* ===== 手机端（≤768px） ===== */
+@media (max-width: 768px) {
+  .users {
+    gap: var(--m-gap-item);
+  }
+
+  .users-title {
+    font-size: var(--m-t-section);
+  }
+
+  .users-sub {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+  }
+
+  .u-card {
+    padding: 14px;
+    background: var(--m-surface);
+    border: 1px solid var(--m-line-soft);
+    border-radius: var(--m-r-card);
+    box-shadow: var(--m-sh-card);
+  }
+
+  .u-row {
+    background: var(--m-surface-2);
+    border-color: var(--m-line);
+    border-radius: var(--m-r-ctrl);
+    gap: 10px;
+  }
+
+  .u-name {
+    font-size: var(--m-t-body);
+  }
+
+  .u-meta {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    gap: 10px;
+  }
+
+  .u-btn {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: var(--m-t-meta);
+    border-radius: var(--m-r-sm);
+  }
+
+  .u-btn.primary {
+    background: var(--m-accent);
+    border-color: var(--m-accent);
+  }
+
+  .u-field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .u-field input,
+  .u-field select {
+    height: 44px;
+    font-size: 16px; /* 规避 iOS 聚焦缩放 */
+    border-radius: var(--m-r-sm);
+  }
+
+  .u-form .u-btn {
+    width: 100%;
+  }
+
+  .u-seg {
+    background: var(--m-sunken);
+  }
+
+  .u-dialog {
+    width: 100%;
+    border-radius: var(--m-r-card);
+    padding: 16px;
+  }
+}

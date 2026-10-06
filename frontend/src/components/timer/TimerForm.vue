@@ -76,14 +76,13 @@ watch(show, (v) => {
   }
 })
 
-// 切换类型时清空日期字段，避免 datetime-local 与 date 控件格式不一致
-watch(
-  () => form.value.type,
-  () => {
-    form.value.target_at = ''
-    form.value.start_at = ''
-  },
-)
+// 切换类型时清空日期字段（避免 datetime-local 与 date 控件格式不一致）。
+// 注意：只在「用户主动改类型」时清空，编辑已有计时器时由 watch(show) 回填，
+// 不能用 watch(type) 清空——否则编辑打开时会把已有 target/start 误清空。
+function onTypeChange() {
+  form.value.target_at = ''
+  form.value.start_at = ''
+}
 
 async function submit() {
   try {
@@ -92,8 +91,8 @@ async function submit() {
       type,
       title: form.value.title,
       note: form.value.note,
-      target_at: needsTarget.value ? toStorage(type, form.value.target_at) : '',
-      start_at: needsStart.value ? toStorage(type, form.value.start_at) : '',
+      target_at: needsTarget.value ? toStorage(type, form.value.target_at ?? '') : '',
+      start_at: needsStart.value ? toStorage(type, form.value.start_at ?? '') : '',
       status: form.value.status,
     }
     if (props.editing) await updateTimer(props.editing.id, payload)
@@ -116,7 +115,7 @@ async function submit() {
     <div class="tm-form">
       <label class="tm-field">
         <span class="tm-label">类型</span>
-        <select v-model="form.type" class="field">
+        <select v-model="form.type" class="field" @change="onTypeChange">
           <option v-for="o in typeOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
         </select>
       </label>

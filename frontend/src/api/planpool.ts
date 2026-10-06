@@ -1,5 +1,7 @@
 // 日程（计划表）API 封装
 
+import { request } from './http'
+
 const BASE = '/api/planpool'
 
 export type Progress = '未完成' | '进行中' | '已完成'
@@ -17,6 +19,28 @@ export interface Task {
   end_date: string
   created_at: string
   updated_at: string
+  /** 自定义列的值：col_key -> value */
+  fields?: Record<string, string>
+}
+
+/** 列定义（灵活列模型） */
+export type ColumnType = 'text' | 'date' | 'number' | 'select' | 'check'
+export interface Column {
+  id: number
+  key: string
+  label: string
+  ftype: ColumnType
+  options: string[]
+  position: number
+  pinned: boolean
+  builtin: boolean
+  visible: boolean
+}
+
+export interface Template {
+  id: number
+  name: string
+  columns: { label: string; ftype: ColumnType; options: string[] }[]
 }
 
 export interface TaskIn {
@@ -44,18 +68,6 @@ export interface Meta {
 
 export function getMeta(): Promise<Meta> {
   return request(`${BASE}/meta`)
-}
-
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(detail || `请求失败：${res.status}`)
-  }
-  return res.json() as Promise<T>
 }
 
 export function listTasks(month?: string): Promise<Task[]> {
@@ -87,3 +99,69 @@ export function getStats(month?: string): Promise<Stats> {
 }
 
 export const exportUrl = `${BASE}/export`
+
+// ---------------------------------------------------------------------------
+// 灵活列
+// ---------------------------------------------------------------------------
+export function listColumns(): Promise<Column[]> {
+  return request(`${BASE}/columns`)
+}
+
+export function addColumn(label: string, ftype: ColumnType, options: string[] = []): Promise<Column> {
+  return request(`${BASE}/columns`, {
+    method: 'POST',
+    body: JSON.stringify({ label, ftype, options }),
+  })
+}
+
+export function updateColumn(
+  id: number,
+  patch: Partial<Pick<Column, 'label' | 'ftype' | 'options' | 'visible' | 'pinned'>>,
+): Promise<Column> {
+  return request(`${BASE}/columns/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(patch),
+  })
+}
+
+export function deleteColumn(id: number): Promise<{ ok: boolean }> {
+  return request(`${BASE}/columns/${id}`, { method: 'DELETE' })
+}
+
+export function setColumnsOrder(ids: number[]): Promise<Column[]> {
+  return request(`${BASE}/columns/order`, {
+    method: 'PUT',
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export function upsertCells(id: number, fields: Record<string, string | number | boolean>): Promise<{ ok: boolean }> {
+  return request(`${BASE}/tasks/${id}/cells`, {
+    method: 'PUT',
+    body: JSON.stringify({ fields }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// 预设模板
+// ---------------------------------------------------------------------------
+export function listTemplates(): Promise<Template[]> {
+  return request(`${BASE}/templates`)
+}
+
+export function applyTemplate(name: string): Promise<Column[]> {
+  return request(`${BASE}/templates/apply`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
+}
+
+/** 按列定义 JSON 重建自定义列（统一模板库 E3 的「任务表」模板走此接口） */
+export function applyColumnsJson(
+  columns: { label: string; ftype: ColumnType; options: string[] }[],
+): Promise<Column[]> {
+  return request(`${BASE}/templates/apply_json`, {
+    method: 'POST',
+    body: JSON.stringify({ columns }),
+  })
+}

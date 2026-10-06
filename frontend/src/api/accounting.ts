@@ -1,5 +1,7 @@
 // 记账 API 封装
 
+import { request } from './http'
+
 const BASE = '/api/accounting'
 
 export type Kind = 'expense' | 'income' | 'reimburse'
@@ -8,6 +10,8 @@ export interface KindMeta {
   value: Kind
   label: string
   categories: string[]
+  /** 一级分类 → 二级分类列表 */
+  category2: Record<string, string[]>
 }
 
 export interface Meta {
@@ -18,6 +22,7 @@ export interface Transaction {
   id: number
   kind: Kind
   category: string
+  category2: string
   amount: number
   note: string
   date: string
@@ -30,14 +35,136 @@ export interface Transaction {
 export interface TransactionIn {
   kind: Kind
   category: string
+  category2: string
   amount: number
   note: string
   date: string
 }
 
+// ---------------------------------------------------------------------------
+// 资产账户
+// ---------------------------------------------------------------------------
+export type AccountType = 'cash' | 'bank' | 'alipay' | 'wechat' | 'other'
+
+export interface Account {
+  id: number
+  name: string
+  type: AccountType
+  balance: number
+}
+
+export function listAccounts(): Promise<Account[]> {
+  return request(`${BASE}/accounts`)
+}
+
+export function createAccount(payload: { name: string; type: AccountType; balance: number }): Promise<Account> {
+  return request(`${BASE}/accounts`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function updateAccount(id: number, payload: { name: string; type: AccountType; balance: number }): Promise<Account> {
+  return request(`${BASE}/accounts/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export function deleteAccount(id: number): Promise<{ ok: boolean }> {
+  return request(`${BASE}/accounts/${id}`, { method: 'DELETE' })
+}
+
+// ---------------------------------------------------------------------------
+// 预算
+// ---------------------------------------------------------------------------
+export interface Budget {
+  id: number
+  period: string
+  scope: 'total' | 'category'
+  category: string
+  limit: number
+}
+
+export interface BudgetStatusItem {
+  id?: number
+  category: string
+  limit: number
+  spent: number
+  remaining: number
+  over: boolean
+  pct: number
+}
+
+export interface BudgetTotalStatus extends BudgetStatusItem {
+  /** spent 的构成：已花的支出部分 */
+  expense: number
+  /** spent 的构成：已垫付的报销部分（同样计入总预算） */
+  reimburse: number
+}
+
+export interface BudgetStatus {
+  period: string
+  total: BudgetTotalStatus
+  by_category: BudgetStatusItem[]
+}
+
+export function listBudgets(period: string): Promise<Budget[]> {
+  return request(`${BASE}/budgets?period=${encodeURIComponent(period)}`)
+}
+
+export function createBudget(payload: { period: string; scope: string; category: string; limit: number }): Promise<Budget> {
+  return request(`${BASE}/budgets`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function updateBudget(id: number, limit: number): Promise<Budget> {
+  return request(`${BASE}/budgets/${id}`, { method: 'PUT', body: JSON.stringify({ limit }) })
+}
+
+export function deleteBudget(id: number): Promise<{ ok: boolean }> {
+  return request(`${BASE}/budgets/${id}`, { method: 'DELETE' })
+}
+
+export function getBudgetStatus(period: string): Promise<BudgetStatus> {
+  return request(`${BASE}/budgets/status?period=${encodeURIComponent(period)}`)
+}
+
+// ---------------------------------------------------------------------------
+// 周期账
+// ---------------------------------------------------------------------------
+export interface Recurring {
+  id: number
+  kind: Kind
+  category: string
+  category2: string
+  amount: number | null
+  note: string
+  freq: 'monthly' | 'weekly'
+  day_of_month: number
+  account: string
+  active: boolean
+  last_applied: string
+}
+
+export function listRecurring(): Promise<Recurring[]> {
+  return request(`${BASE}/recurring`)
+}
+
+export function createRecurring(payload: Partial<Recurring>): Promise<Recurring> {
+  return request(`${BASE}/recurring`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function updateRecurring(id: number, payload: Partial<Recurring>): Promise<Recurring> {
+  return request(`${BASE}/recurring/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export function deleteRecurring(id: number): Promise<{ ok: boolean }> {
+  return request(`${BASE}/recurring/${id}`, { method: 'DELETE' })
+}
+
+export function applyRecurring(period: string): Promise<{ created: number; skipped: number }> {
+  return request(`${BASE}/recurring/apply?period=${encodeURIComponent(period)}`, { method: 'POST' })
+}
+
 export interface CategoryAmount {
   category: string
   amount: number
+  /** true = 该分类已不在当前分类表中（历史遗留，如「住宿 / 发展 / 家庭」） */
+  legacy?: boolean
 }
 
 export interface Summary {
@@ -48,25 +175,13 @@ export interface Summary {
   net_expense: number
   pending: number
   settled: number
-  /** 未报销费用 = 全部垫付 − 已报销到账（按当前月/年/全部口径） */
+  /** 未收回垫付（滚动余额口径）：截至期末的累计垫付 − 累计到账，与资产卡/年度走势一致 */
   unreimbursed: number
   breakdown: {
     expense: CategoryAmount[]
     income: CategoryAmount[]
     reimburse: CategoryAmount[]
   }
-}
-
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(detail || `请求失败：${res.status}`)
-  }
-  return res.json() as Promise<T>
 }
 
 export function getMeta(): Promise<Meta> {
@@ -158,6 +273,8 @@ export interface MonthPoint {
   income: number
   pending: number
   settled: number
+  /** 未收回垫付（月末滚动余额：累计待报销 − 累计已报销到账） */
+  unreimbursed: number
   net_expense: number
   net_income: number
 }
@@ -183,11 +300,15 @@ export function getDailyNet(year: string, month?: string): Promise<DailyNet> {
 }
 
 export interface Balance {
-  deposit: number
-  saving: number
+  /** 多账户明细 */
+  accounts: Account[]
+  /** 账户余额合计（元） */
+  accounts_total: number
+  /** 累计净收入（元）= 全部收入 − 全部支出（不含报销） */
   net_income: number
-  /** 未收回垫付：垫付出去但尚未报销回来的钱（只影响余额，不影响净收入） */
+  /** 未收回垫付（元）= 全部待报销 − 全部已报销到账 */
   outstanding: number
+  /** 净资产（元）= 账户合计 + 累计净收入 − 未收回垫付 */
   balance: number
 }
 

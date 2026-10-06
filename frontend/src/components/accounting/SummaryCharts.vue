@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import * as echarts from 'echarts'
 import type { Summary, YearSeries } from '@/api/accounting'
+import { loadEcharts, type ECharts } from '@/utils/echarts'
 
 const props = defineProps<{
   summary: Summary | null
@@ -13,8 +13,10 @@ const incomeEl = ref<HTMLDivElement>()
 const reimburseEl = ref<HTMLDivElement>()
 const trendEl = ref<HTMLDivElement>()
 
-let pieCharts: echarts.ECharts[] = []
-let trendChart: echarts.ECharts | null = null
+let pieCharts: ECharts[] = []
+let trendChart: ECharts | null = null
+// 异步加载 echarts 期间组件可能已卸载，避免给已卸载节点 init
+let disposed = false
 
 // 高饱和配色（与日程模块一致）
 const COLORS = ['#E0705A', '#67C23A', '#4A90D9', '#F5A623', '#9B59B6', '#E74C3C', '#2ECC71']
@@ -49,11 +51,17 @@ function makePieOption(title: string, data: { name: string; value: number }[]) {
   }
 }
 
-function renderPies() {
+async function renderPies() {
   if (!props.summary) return
   const b = props.summary.breakdown
-  const toData = (arr: { category: string; amount: number }[]) =>
-    arr.filter((x) => x.amount > 0).map((x) => ({ name: x.category, value: x.amount }))
+  // 历史遗留分类（已不在当前分类表）加「历史」后缀，避免与现行分类混淆
+  const toData = (arr: { category: string; amount: number; legacy?: boolean }[]) =>
+    arr
+      .filter((x) => x.amount > 0)
+      .map((x) => ({ name: x.legacy ? `${x.category}（历史）` : x.category, value: x.amount }))
+
+  const echarts = await loadEcharts()
+  if (disposed) return
 
   if (expenseEl.value) {
     pieCharts[0] = echarts.init(expenseEl.value)
@@ -69,17 +77,21 @@ function renderPies() {
   }
 }
 
-function renderTrend() {
+async function renderTrend() {
   if (!props.yearSeries || !trendEl.value) return
 
   const months = props.yearSeries.series.map((p) => `${p.month}月`)
+  // 未收回垫付是「时点余额」，其余是「期间发生额」，量纲不同 → 必须分置双 Y 轴，
+  // 否则余额线会被流量线压扁，读数失真。
   const lines = [
-    { name: '支出', key: 'expense', color: TREND_COLORS.expense },
-    { name: '收入', key: 'income', color: TREND_COLORS.income },
-    { name: '未报销费用', key: 'pending', color: TREND_COLORS.pending },
-    { name: '净收入', key: 'net_income', color: TREND_COLORS.net_income },
+    { name: '支出', key: 'expense', color: TREND_COLORS.expense, axis: 'left' },
+    { name: '收入', key: 'income', color: TREND_COLORS.income, axis: 'left' },
+    { name: '净收入', key: 'net_income', color: TREND_COLORS.net_income, axis: 'left' },
+    { name: '未收回垫付', key: 'unreimbursed', color: TREND_COLORS.pending, axis: 'right' },
   ]
 
+  const echarts = await loadEcharts()
+  if (disposed) return
   trendChart = echarts.init(trendEl.value)
   trendChart.setOption({
     title: {
@@ -97,21 +109,33 @@ function renderTrend() {
       itemWidth: 14,
       itemHeight: 10,
     },
-    grid: { top: 56, left: 56, right: 24, bottom: 56 },
+    grid: { top: 56, left: 56, right: 64, bottom: 56 },
     xAxis: {
       type: 'category',
       data: months,
       axisLine: { lineStyle: { color: '#ece7de' } },
       axisLabel: { color: '#8a857a' },
     },
-    yAxis: {
-      type: 'value',
-      axisLabel: { color: '#8a857a' },
-      splitLine: { lineStyle: { color: '#f0ece3' } },
-    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '发生额',
+        nameTextStyle: { color: '#8a857a', fontSize: 11 },
+        axisLabel: { color: '#8a857a' },
+        splitLine: { lineStyle: { color: '#f0ece3' } },
+      },
+      {
+        type: 'value',
+        name: '未收回余额',
+        nameTextStyle: { color: TREND_COLORS.pending, fontSize: 11 },
+        axisLabel: { color: TREND_COLORS.pending },
+        splitLine: { show: false },
+      },
+    ],
     series: lines.map((l) => ({
       name: l.name,
       type: 'line',
+      yAxisIndex: l.axis === 'right' ? 1 : 0,
       data: props.yearSeries!.series.map((p) => (p as any)[l.key]),
       smooth: true,
       symbol: 'circle',
@@ -134,6 +158,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   window.removeEventListener('resize', resize)
   pieCharts.forEach((c) => c.dispose())
   pieCharts = []

@@ -228,6 +228,59 @@ def render_entry_text(date: str) -> str:
     return f"{entry['heading']}\n\n{body}" if body else entry["heading"]
 
 
+def search_daily(year: int, q: str) -> list[dict]:
+    """按正文关键词检索某年日报，返回命中日期与上下文片段。"""
+    q = (q or "").strip()
+    if not q:
+        return []
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT date, body FROM daily_entries WHERE year = ? AND body LIKE ? "
+            "ORDER BY date DESC",
+            (year, f"%{q}%"),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    out: list[dict] = []
+    for r in rows:
+        out.append({"date": r["date"], "snippet": _make_snippet(r["body"] or "", q)})
+    return out
+
+
+_TAG_RE = re.compile(r"(?:^|\s)#([^\s#,，。；;：:]+)")
+
+
+def list_tags(year: int) -> dict:
+    """返回某年日报的标签映射：{tag: [date, ...]}（按首次出现顺序）。"""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT date, body FROM daily_entries WHERE year = ?", (year,)
+        ).fetchall()
+    finally:
+        conn.close()
+    mapping: dict = {}
+    for r in rows:
+        for t in _TAG_RE.findall(r["body"] or ""):
+            mapping.setdefault(t, [])
+            if r["date"] not in mapping[t]:
+                mapping[t].append(r["date"])
+    return mapping
+
+
+def _make_snippet(body: str, q: str, radius: int = 40) -> str:
+    """取关键词首次出现位置前后的片段，用 … 截断。"""
+    idx = body.find(q)
+    if idx < 0:
+        return body[: radius * 2].strip()
+    start = max(0, idx - radius)
+    end = min(len(body), idx + len(q) + radius)
+    snippet = body[start:end].replace("\n", " ").strip()
+    return ("…" if start > 0 else "") + snippet + ("…" if end < len(body) else "")
+
+
 def export_year(year: int) -> str:
     """导出某年全部日报为 Markdown（按月分组、含日历任务注入）。"""
     parts: list[str] = []
@@ -249,13 +302,14 @@ def import_legacy_md() -> int:
 
     返回新导入篇数；已存在于库中的日期跳过。原文件保留不动。
     """
-    if not config.WORKSPACES_DIR.exists():
+    root = config.data_dir()
+    if not root.exists():
         return 0
     heading_re = re.compile(DAILY_HEADING_RE)
     imported = 0
     year_dirs = sorted(
         d
-        for d in config.WORKSPACES_DIR.iterdir()
+        for d in root.iterdir()
         if d.is_dir() and len(d.name) == 4 and d.name.isdigit()
     )
     for ydir in year_dirs:

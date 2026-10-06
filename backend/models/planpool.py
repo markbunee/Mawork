@@ -44,4 +44,41 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 CREATE INDEX IF NOT EXISTS idx_tasks_start ON tasks(start_date);
 CREATE INDEX IF NOT EXISTS idx_tasks_end   ON tasks(end_date);
+
+-- 列定义：灵活列模型（取代固定 7 列）。
+--   builtin=1 为内置列，其值与 tasks 核心列一一对应，不可删、可重排/隐藏；
+--   builtin=0 为自定义列，其值存于 task_cells。
+--   ftype ∈ text | date | number | select | check
+--   options 仅 select 用，JSON 数组字符串
+--   position 决定显示顺序；pinned 列固定在左侧（行号之后）
+CREATE TABLE IF NOT EXISTS task_columns (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    key      TEXT    NOT NULL UNIQUE,        -- 内置列=核心列名；自定义列=c{id}
+    label    TEXT    NOT NULL,
+    ftype    TEXT    NOT NULL DEFAULT 'text',
+    options  TEXT    DEFAULT '',              -- select 的选项 JSON
+    position INTEGER NOT NULL DEFAULT 0,
+    pinned   INTEGER NOT NULL DEFAULT 0,      -- 1=固定在行号之后
+    builtin  INTEGER NOT NULL DEFAULT 0,
+    visible  INTEGER NOT NULL DEFAULT 1
+);
+
+-- 自定义列的值（EAV），内置列不在此表
+CREATE TABLE IF NOT EXISTS task_cells (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id  INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    col_key  TEXT    NOT NULL,
+    value    TEXT    DEFAULT '',
+    UNIQUE (task_id, col_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_cells_task ON task_cells(task_id);
+
+-- 预设列模板（可一键套用，重建自定义列）
+CREATE TABLE IF NOT EXISTS task_templates (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    name     TEXT    NOT NULL,
+    builtin  INTEGER NOT NULL DEFAULT 1,       -- 1=系统内置模板（不可删）
+    columns_json TEXT NOT NULL                  -- 自定义列定义 JSON 数组
+);
 """

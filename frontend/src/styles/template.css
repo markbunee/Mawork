@@ -1,0 +1,135 @@
+/* 统一模板库（横切能力 E3）：TemplatePicker 内容区样式
+   外壳沿用 search.css 的 gs-mask / gs-panel / gs-bar / gs-body */
+
+.tpl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tpl-item:hover,
+.tpl-item.on {
+  background: rgba(122, 78, 45, 0.08);
+}
+
+.tpl-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink, #000000);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tpl-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--accent, #8a5a2e);
+  background: var(--accent-soft, rgba(196, 142, 92, 0.18));
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.tpl-del {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint, #8a8074);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+  border-radius: 6px;
+}
+.tpl-del:hover {
+  color: #b8503a;
+  background: #fbeee9;
+}
+
+.tpl-preview {
+  margin: 6px 4px 0;
+  padding: 10px 12px;
+  background: #f7f3ea;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-soft, #3f3a34);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.tpl-add {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(122, 78, 45, 0.12);
+}
+
+.tpl-add-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #8a5a2e);
+  margin-bottom: 6px;
+}
+
+.tpl-input,
+.tpl-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line, rgba(122, 78, 45, 0.2));
+  border-radius: 8px;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink, #000000);
+  background: var(--surface, #fff);
+  outline: none;
+}
+.tpl-input {
+  margin-bottom: 6px;
+}
+.tpl-textarea {
+  min-height: 62px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.tpl-save {
+  margin-top: 6px;
+  border: 1px solid var(--accent, #8a5a2e);
+  background: var(--accent-soft, rgba(196, 142, 92, 0.18));
+  color: var(--accent, #8a5a2e);
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tpl-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tpl-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 4px 0;
+}
+
+.tpl-apply {
+  border: none;
+  background: var(--accent, #8a5a2e);
+  color: var(--m-ink-inv, #fff);
+  border-radius: 9px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tpl-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

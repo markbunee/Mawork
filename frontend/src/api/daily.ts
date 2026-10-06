@@ -1,5 +1,7 @@
 // 日报相关 API 封装（日报库：daily.db，正文为整篇 Markdown）
 
+import { request } from './http'
+
 const BASE = '/api/daily'
 
 export interface DailyGroup {
@@ -29,18 +31,6 @@ export interface DailySaveResult {
   plan_synced: number
 }
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(detail || `请求失败：${res.status}`)
-  }
-  return res.json() as Promise<T>
-}
-
 /** 列出某年日报日期（按月份分组的树结构） */
 export function listDaily(year: string): Promise<{ year: string; groups: DailyGroup[] }> {
   return request(`${BASE}/${year}`)
@@ -67,4 +57,22 @@ export function upsertDaily(year: string, date: string, body: string): Promise<D
 /** 导出某年全部日报为 Markdown 文件（含日历任务注入） */
 export function exportDailyUrl(year: string): string {
   return `${BASE}/export?year=${encodeURIComponent(year)}`
+}
+
+export interface DailySearchResult {
+  date: string
+  snippet: string
+}
+
+/** 关键词检索某年日报正文 */
+export function searchDaily(
+  year: string,
+  q: string,
+): Promise<{ year: string; q: string; results: DailySearchResult[] }> {
+  return request(`${BASE}/search?year=${encodeURIComponent(year)}&q=${encodeURIComponent(q)}`)
+}
+
+/** 某年日报标签映射：{ tag: date[] } */
+export function listTags(year: string): Promise<{ year: string; tags: Record<string, string[]> }> {
+  return request(`${BASE}/tags?year=${encodeURIComponent(year)}`)
 }

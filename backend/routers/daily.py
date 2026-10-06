@@ -54,6 +54,20 @@ def export_year(year: str = Query(...)):
     )
 
 
+@router.get("/search")
+def search_daily(year: str = Query(...), q: str = Query(...)):
+    """按关键词检索某年日报正文（前端日报搜索框）。"""
+    y = _check_year(year)
+    return {"year": year, "q": q, "results": daily.search_daily(y, q)}
+
+
+@router.get("/tags")
+def list_tags(year: str = Query(...)):
+    """返回某年日报的标签映射（前端标签过滤）。"""
+    y = _check_year(year)
+    return {"year": year, "tags": daily.list_tags(y)}
+
+
 @router.get("/{year}")
 def list_daily(year: str):
     """按月份分组列出某年日报的日期树。"""

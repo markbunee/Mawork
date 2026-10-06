@@ -1,0 +1,617 @@
+/* 习惯培养：红色主题（凡是习惯相关一律红色；--habit* 变量已统一在 base.css :root 定义） */
+
+/* ---------- 看板总览 ---------- */
+.habit-board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+}
+
+.board-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.board-card {
+  border: 1px solid var(--habit-line);
+  background: var(--habit-soft);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.board-card .bc-label {
+  font-size: 13px;
+  color: var(--habit-deep);
+  margin-bottom: 8px;
+}
+
+.board-card .bc-value {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  color: var(--habit);
+  font-weight: 600;
+}
+
+.board-card .bc-sub {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
+
+.bc-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: #f5cdc5;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.bc-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--habit);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+/* ---------- 头部 ---------- */
+.habit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.habit-head .hh-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--habit);
+}
+
+.btn-habit-new {
+  border: 1px solid var(--habit);
+  background: var(--habit);
+  color: #fff;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-habit-new:hover {
+  background: var(--habit-deep);
+}
+
+/* ---------- 习惯卡片 ---------- */
+.habit-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.habit-card {
+  border: 1px solid var(--habit-line);
+  border-radius: var(--radius);
+  padding: 18px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habit-card.is-checked {
+  border-color: var(--habit);
+  box-shadow: 0 0 0 1px var(--habit) inset;
+}
+
+.habit-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.habit-emoji {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.habit-name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.habit-reason {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.habit-top .habit-streak {
+  margin-left: auto;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.streak-num {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--habit);
+  line-height: 1;
+}
+
+.streak-label {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.habit-card-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.icon-btn:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* 统计行 */
+.habit-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.habit-stats b {
+  color: var(--habit);
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+
+.habit-rate {
+  flex: 1;
+  min-width: 0;
+}
+
+.habit-rate .rate-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: #f5cdc5;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.habit-rate .rate-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--habit);
+  border-radius: 4px;
+}
+
+/* 近 30 天热力 */
+.habit-heat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.hm {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: #ece5d8;
+}
+
+.hm.expected {
+  background: #f5cdc5;
+}
+
+.hm.done {
+  background: var(--habit);
+}
+
+/* 打卡按钮 */
+.checkin-btn {
+  width: 100%;
+  border: 1px solid var(--habit);
+  background: var(--habit);
+  color: #fff;
+  font-size: 14px;
+  padding: 9px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.checkin-btn:hover {
+  background: var(--habit-deep);
+}
+
+.checkin-btn.done {
+  background: var(--surface);
+  color: var(--habit);
+}
+
+.checkin-btn.done:hover {
+  background: var(--habit-soft);
+}
+
+.empty-habit {
+  border: 1px dashed var(--habit-line);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+/* ---------- 新建 / 编辑弹窗 ---------- */
+.habit-form .form-row {
+  margin-bottom: 14px;
+}
+
+.habit-form label {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.habit-form input[type="text"],
+.habit-form textarea,
+.habit-form input[type="date"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.habit-form input:focus,
+.habit-form textarea:focus {
+  border-color: var(--habit);
+}
+
+.habit-form .freq-opts {
+  display: flex;
+  gap: 8px;
+}
+
+.freq-opt {
+  flex: 1;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.freq-opt.active {
+  border-color: var(--habit);
+  background: var(--habit-soft);
+  color: var(--habit);
+  font-weight: 600;
+}
+
+.week-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.week-day {
+  width: 38px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+
+.week-day.active {
+  border-color: var(--habit);
+  background: var(--habit);
+  color: #fff;
+}
+
+/* ---------- 打卡成功庆祝弹窗 ---------- */
+.celebrate {
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+
+.celebrate .ce-emoji {
+  font-size: 46px;
+  line-height: 1;
+}
+
+.celebrate .ce-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--habit);
+  margin: 6px 0 2px;
+}
+
+.celebrate .ce-name {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+
+.ce-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ce-cell {
+  border: 1px solid var(--habit-line);
+  background: var(--habit-soft);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.ce-cell .ce-num {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--habit);
+}
+
+.ce-cell .ce-cap {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.ce-progress {
+  height: 8px;
+  border-radius: 5px;
+  background: #f5cdc5;
+  overflow: hidden;
+  margin: 4px 0 10px;
+}
+
+.ce-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--habit);
+}
+
+.ce-quote {
+  font-size: 13px;
+  color: var(--habit-deep);
+  font-family: var(--font-serif);
+  letter-spacing: 0.5px;
+}
+
+/* ---------- 日历打卡面板 ---------- */
+.habit-panel {
+  min-height: 120px;
+}
+
+.habit-panel .hp-date {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--habit);
+  margin-bottom: 12px;
+}
+
+.habit-panel .hp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--habit-line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.habit-panel .hp-item.muted {
+  opacity: 0.6;
+}
+
+.habit-panel .hp-name {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.habit-panel .hp-emoji {
+  font-size: 18px;
+}
+
+.habit-panel .hp-check {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--habit);
+  background: var(--surface);
+  color: var(--habit);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.habit-panel .hp-check.on {
+  background: var(--habit);
+  color: #fff;
+}
+
+.habit-panel .hp-empty {
+  color: var(--ink-faint);
+  font-size: 13px;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ===== 手机端（≤768px）：单列卡片流 ===== */
+@media (max-width: 768px) {
+  /* 概览：1px 间隙 + 底色透出分隔线 */
+  .board-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--m-r-card);
+    background: var(--m-line-soft);
+    box-shadow: var(--m-sh-card);
+  }
+  .board-card {
+    padding: 16px;
+    background: var(--m-surface);
+  }
+  .bc-label {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    margin-bottom: 6px;
+  }
+  .bc-value {
+    font-size: var(--m-t-num);
+    font-weight: 700;
+    color: var(--m-ink);
+    letter-spacing: -0.5px;
+  }
+  .bc-sub {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+  }
+  .bc-bar {
+    height: 6px;
+    margin-top: 10px;
+    border-radius: 999px;
+    background: var(--m-sunken);
+    overflow: hidden;
+  }
+  .bc-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--m-habit), #d8614f);
+  }
+
+  .habit-head {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .habit-head .hh-title {
+    font-size: var(--m-t-section);
+    font-weight: 600;
+    color: var(--m-ink);
+  }
+  .btn-habit-new {
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: var(--m-accent-soft);
+    color: var(--m-accent);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    cursor: pointer;
+  }
+
+  .habit-list {
+    grid-template-columns: 1fr;
+    gap: var(--m-gap-item);
+  }
+  .habit-card {
+    padding: 14px;
+    border: 1px solid transparent;
+  }
+  .habit-card.is-checked {
+    border-color: var(--m-habit-soft);
+    background: linear-gradient(180deg, #fffafa 0%, #ffffff 100%);
+  }
+  .habit-top {
+    flex-wrap: wrap;
+  }
+  .habit-emoji {
+    font-size: 26px;
+  }
+  .habit-name {
+    font-size: var(--m-t-section);
+    font-weight: 600;
+  }
+  .habit-reason {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+  }
+  .habit-streak .streak-num {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--m-habit);
+  }
+  .streak-label {
+    font-size: 10px;
+    color: var(--m-ink-3);
+  }
+  .habit-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .habit-rate .rate-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--m-sunken);
+    overflow: hidden;
+  }
+  .habit-rate .rate-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--m-habit);
+  }
+  .habit-card-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .checkin-btn {
+    border-radius: var(--m-r-ctrl);
+    font-size: var(--m-t-body);
+    font-weight: 600;
+    padding: 12px;
+  }
+  .icon-btn {
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-sm);
+    background: var(--m-surface);
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-2);
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+}

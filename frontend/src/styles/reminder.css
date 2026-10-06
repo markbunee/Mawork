@@ -1,0 +1,74 @@
+/* 提醒通知（横切能力 E4）：顶栏铃铛按钮 + 角标 */
+
+.gs-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink, #000000);
+}
+
+.topbar-bell {
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 0 14px;
+  height: 38px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.topbar-bell:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--m-ink-inv);
+  font-size: 11px;
+  line-height: 17px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.m-appbar-bell {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--m-r-pill);
+  background: var(--m-accent-soft);
+  color: var(--m-accent);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.m-bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--m-ink-inv);
+  font-size: 10px;
+  line-height: 15px;
+  text-align: center;
+  font-weight: 600;
+}

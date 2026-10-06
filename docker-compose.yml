@@ -1,0 +1,52 @@
+# MaWork 一键编排：前端(nginx) + 后端(uvicorn)
+# 使用：
+#   cp .env.example .env   # 填入真实密码/密钥
+#   docker compose up -d --build
+#
+# 数据目录 workspaces 与日志目录 logs 均挂载到宿主机，容器销毁数据不丢。
+#
+# 与 Ticketsys 共用宿主机 80/443：
+#   本项目的 80 只映射到 127.0.0.1:8080 便于本机排查，不对外暴露；
+#   公网统一走 mawork.neftoo.xyz，由 Ticketsys 的 nginx 按 server_name
+#   经共享网络 webnet 反向代理到 mawork-frontend。
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: mawork-backend
+    env_file: .env
+    environment:
+      # 日志写入挂载卷（与宿主机 ./logs 对应），保证日志一定落盘
+      MAWORK_LOG_DIR: /app/logs
+    volumes:
+      - ./workspaces:/app/workspaces
+      - ./logs:/app/logs
+    expose:
+      - "8001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/api/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mawork-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # 仅本机可访问；公网统一由 mawork.neftoo.xyz 进入
+      - "127.0.0.1:${HOST_PORT:-8080}:80"
+    networks:
+      - default
+      - webnet
+    restart: unless-stopped
+
+networks:
+  webnet:
+    external: true

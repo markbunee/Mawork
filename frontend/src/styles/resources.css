@@ -33,27 +33,6 @@
   letter-spacing: 1px;
 }
 
-.res-up {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-soft);
-  font-size: 14px;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.res-up:hover:not(:disabled) {
-  color: var(--ink);
-  border-color: var(--ink-faint);
-}
-
-.res-up:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 /* 目录树展开箭头 */
 .res-caret {
   flex-shrink: 0;
@@ -271,4 +250,323 @@
   border: none;
   border-top: 1px solid var(--line);
   margin: 1.5em 0;
+}
+
+/* 文件管理（上传 / 下载 / 重命名 / 删除 / Markdown 编辑） */
+.res-tools {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.res-tools-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.res-tools-end {
+  margin-left: auto;
+}
+.res-tools button {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--m-border, #e3e3e3);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--m-text, #333);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, filter 0.15s;
+}
+.res-tools button:hover:not(:disabled) {
+  border-color: var(--m-primary, #409eff);
+  color: var(--m-primary, #409eff);
+}
+.res-tools button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.res-tools button.btn-solid {
+  border-color: var(--m-primary, #409eff);
+  background: var(--m-primary, #409eff);
+  color: #fff;
+  font-weight: 600;
+}
+.res-tools button.btn-solid:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.06);
+}
+.res-tools button.btn-icon {
+  width: 30px;
+  padding: 0;
+  font-size: 15px;
+  color: var(--m-text-2, #666);
+}
+
+/* ===== 手机端（≤768px）：主从式（列表全屏 + 预览上滑覆盖层） ===== */
+@media (max-width: 768px) {
+  .resources {
+    flex-direction: column;
+    gap: 14px;
+    height: auto;
+  }
+
+  /* 文件列表占满可视区；预览打开时以上滑覆盖层呈现，不挤压列表 */
+  .res-pane {
+    width: 100%;
+    height: calc(100dvh - 180px);
+    min-height: 320px;
+    padding: 6px;
+    overflow-y: auto;
+    background: var(--m-surface);
+    border-radius: var(--m-r-card);
+    box-shadow: var(--m-sh-card);
+  }
+
+  /* 顶栏工具按钮在手机端收进悬浮「+」操作表，避免小屏拥挤 */
+  .res-toolbar .res-tools {
+    display: none;
+  }
+  .res-title {
+    font-size: 16px;
+  }
+
+  /* 文件行加大点按区域，符合拇指操作；去掉 hover 态（移动端无悬停） */
+  .res-file {
+    padding: 14px 12px;
+    font-size: 14px;
+    border-radius: var(--m-r-sm);
+  }
+  .res-file:hover {
+    background: transparent;
+  }
+  .res-file.active {
+    background: var(--m-accent-soft);
+  }
+  .res-file-icon {
+    font-size: 18px;
+  }
+  .res-tip {
+    display: none;
+  }
+
+  /* 悬浮操作按钮：右下角，悬浮在底部 Tab 之上 */
+  .res-fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    z-index: 35;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    background: var(--m-accent-grad);
+    color: var(--m-ink-inv);
+    font-size: 28px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(122, 78, 45, 0.36);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .res-fab:active {
+    transform: scale(0.94);
+  }
+
+  /* 预览：手机端作为上滑全屏覆盖层，自带返回按钮 */
+  .res-preview {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    border-radius: 0;
+    border: none;
+    background: var(--m-surface);
+    animation: m-up 0.24s cubic-bezier(0.22, 0.8, 0.3, 1);
+  }
+  .preview-head {
+    position: sticky;
+    top: 0;
+    gap: 10px;
+    padding: 14px var(--m-pad-x);
+    background: var(--m-surface);
+    z-index: 1;
+  }
+  .res-close {
+    flex-shrink: 0;
+    height: 32px;
+    padding: 0 12px;
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: var(--m-sunken);
+    color: var(--m-ink);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .preview-actions button {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .md-body {
+    padding: 18px var(--m-pad-x);
+  }
+  .md-ta {
+    min-height: 60vh;
+  }
+}
+
+
+
+.res-file.is-dir .res-file-name {
+  font-weight: 600;
+}
+
+.res-tip {
+  margin: 6px 10px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--m-text-3, #999);
+}
+
+.res-file-input {
+  display: none;
+}
+
+/* 操作栏 */
+.preview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.preview-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--m-text-3, #999);
+}
+.preview-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.preview-actions button {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--m-border, #e3e3e3);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--m-text, #333);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.preview-actions button:hover:not(:disabled) {
+  border-color: var(--m-primary, #409eff);
+  color: var(--m-primary, #409eff);
+}
+.preview-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.preview-actions button.primary {
+  border-color: var(--m-primary, #409eff);
+  background: var(--m-primary, #409eff);
+  color: #fff;
+}
+.preview-actions button.danger:hover:not(:disabled) {
+  border-color: #f56c6c;
+  color: #f56c6c;
+}
+
+/* Markdown 编辑器 */
+.md-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.md-tools {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--m-border, #eee);
+}
+.md-tools button {
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--m-border, #e3e3e3);
+  border-radius: 3px;
+  background: #fff;
+  font-size: 11px;
+  color: var(--m-text-2, #666);
+  cursor: pointer;
+}
+.md-tools button:hover {
+  border-color: var(--m-primary, #409eff);
+  color: var(--m-primary, #409eff);
+}
+.md-tools-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--m-text-3, #aaa);
+}
+.md-ta {
+  flex: 1;
+  min-height: 320px;
+  padding: 10px;
+  border: 1px solid var(--m-border, #e3e3e3);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+}
+.md-ta:focus {
+  border-color: var(--m-primary, #409eff);
+}
+
+/* 拖拽上传遮罩 */
+.resources.drop-active .res-pane {
+  outline: 2px dashed var(--m-primary, #409eff);
+  outline-offset: -6px;
+}
+.res-drop-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 20;
+}
+.res-drop-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 28px;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+.res-drop-box strong {
+  font-size: 15px;
+}
+.res-drop-busy {
+  color: var(--m-primary, #409eff);
+  font-size: 12px;
 }

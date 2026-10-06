@@ -1,0 +1,64 @@
+/* 数据备份（横切能力 E5）：入口按钮 + 面板内容
+   外壳沿用 search.css 的 gs-mask / gs-panel / gs-bar / gs-body */
+
+.m-appbar-backup {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--m-r-pill);
+  background: var(--m-accent-soft);
+  color: var(--m-accent);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bk-desc {
+  margin: 4px 4px 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft, #3f3a34);
+}
+
+.bk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.bk-btn {
+  border: 1px solid var(--accent, #8a5a2e);
+  background: var(--accent-soft, rgba(196, 142, 92, 0.18));
+  color: var(--accent, #8a5a2e);
+  border-radius: 9px;
+  padding: 8px 18px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.bk-btn:hover {
+  filter: brightness(0.97);
+}
+.bk-btn.primary {
+  background: var(--accent, #8a5a2e);
+  border-color: var(--accent, #8a5a2e);
+  color: var(--m-ink-inv, #fff);
+  font-weight: 600;
+}
+.bk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bk-file {
+  display: none;
+}
+
+.bk-note {
+  margin: 14px 4px 2px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-faint, #8a8074);
+}
+

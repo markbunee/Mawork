@@ -254,6 +254,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--line);
 }
@@ -266,6 +268,19 @@
 .sum-value {
   font-family: var(--font-serif);
   font-size: 15px;
+}
+
+/* 报销细分：垫付 / 已收回 / 未收回（小计下方第二行） */
+.sum-reimburse {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.sum-reimburse b {
+  color: var(--accent, #b07a3e);
+  font-weight: 600;
 }
 
 .tx-table {
@@ -404,18 +419,6 @@
   flex-direction: column;
   gap: 10px;
 }
-.asset-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.asset-label {
-  font-size: 12px;
-  color: var(--ink-faint);
-}
-.asset-row .field {
-  width: 110px;
-}
 .btn-asset-save {
   border: 1px solid var(--line);
   background: var(--surface);
@@ -435,9 +438,193 @@
   font-size: 18px;
   font-weight: 600;
 }
-.asset-hint {
+/* 卡片标题（资产/预算/周期账共用） */
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.card-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+/* 资产账户行 */
+.acct-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.acct-row .field-name {
+  flex: 1;
+  min-width: 80px;
+}
+.acct-row .field-bal {
+  width: 100px;
+  flex: none;
+}
+.sel-sm {
+  flex: none;
+  width: 80px;
+}
+.acct-add {
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+.asset-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.asset-total .asset-value {
+  font-size: 16px;
+}
+
+/* 超支预警 */
+.budget-alert {
+  background: #fbeae8;
+  border: 1px solid #e9b3ab;
+  color: #a93226;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+}
+
+/* 预算执行面板 */
+.budget-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.budget-total,
+.budget-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* 预算「已花」构成说明（支出 + 垫付） */
+.budget-note {
+  margin: 0;
   font-size: 11px;
   color: var(--ink-faint);
+}
+.budget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.bar {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 6px;
+  transition: width 0.3s;
+}
+.bar-fill.over {
+  background: #a93226;
+}
+.budget-set {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.budget-set .field {
+  flex: 1;
+}
+.budget-set-cat {
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+}
+.budget-set-cat .sel {
+  flex: none;
+  width: 110px;
+}
+
+/* 周期账面板 */
+.recur-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recur-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.recur-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.recur-cat {
+  font-weight: 600;
+  color: var(--ink);
+}
+.recur-amt {
+  color: var(--accent);
+}
+.recur-meta {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.recur-add {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+}
+.recur-add .field-name {
+  flex: 1;
+  min-width: 60px;
+}
+.recur-add .field-bal {
+  width: 80px;
+  flex: none;
+}
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+/* 列表二级分类标签 */
+.cat-sub {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  background: var(--bg);
+  padding: 1px 7px;
+  border-radius: 10px;
 }
 
 .charts-wrap {
@@ -454,7 +641,7 @@
 
 .chart-box {
   height: 220px;
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
@@ -462,4 +649,208 @@
 .chart-trend {
   height: 300px;
   width: 100%;
+}
+
+/* ===== 手机端（≤768px）：单列纵向流 ===== */
+@media (max-width: 768px) {
+  .acct-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--m-gap-item);
+    padding: 0;
+    background: none;
+  }
+
+  /* 胶囊分段控件：轨道样式由 mobile.css 统一提供 */
+  .view-switch,
+  .kind-filter,
+  .kind-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .view-switch::-webkit-scrollbar,
+  .kind-filter::-webkit-scrollbar,
+  .kind-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .switch-btn,
+  .kind-tab {
+    flex: 1;
+    white-space: nowrap;
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: transparent;
+    color: var(--m-ink-2);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+  }
+  .switch-btn.active,
+  .kind-tab.active {
+    background: var(--m-surface);
+    color: var(--m-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08);
+  }
+
+  /* 期间切换 */
+  .period-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .period-nav .sel {
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-sm);
+    background: var(--m-surface);
+    font-size: var(--m-t-meta);
+    padding: 7px 10px;
+  }
+  .nav-arrow {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-pill);
+    background: var(--m-surface);
+    color: var(--m-ink-2);
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .acct-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--m-gap-section);
+  }
+
+  /* 概览：2 列网格，用 1px 间隙 + 底色透出分隔线 */
+  .overview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--m-r-card);
+    background: var(--m-line-soft);
+    box-shadow: var(--m-sh-card);
+  }
+  .ov-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px;
+    background: var(--m-surface);
+  }
+  .ov-label {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+  }
+  .ov-value {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--m-ink);
+    letter-spacing: -0.3px;
+  }
+
+  /* 录入表单 */
+  .tx-form {
+    padding: 14px;
+  }
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: var(--m-gap-item);
+  }
+  .form-label {
+    font-size: var(--m-t-meta);
+    font-weight: 600;
+    color: var(--m-ink-3);
+  }
+  .tx-form input,
+  .tx-form select,
+  .tx-form textarea {
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-ctrl);
+    background: var(--m-surface-2);
+    font-size: var(--m-t-body);
+    padding: 11px 12px;
+  }
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--m-r-ctrl);
+    background: var(--m-accent-grad);
+    color: var(--m-ink-inv);
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: var(--m-sh-fab);
+    cursor: pointer;
+  }
+
+  /* 账单列表 */
+  .tx-list-wrap {
+    padding: 6px;
+    max-height: none;
+  }
+  .tx-table-scroll {
+    overflow-x: auto;
+  }
+  .tx-table {
+    font-size: var(--m-t-meta);
+  }
+  .amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  /* 资产账户 / 周期账：窄屏换行，保持录入可用 */
+  .acct-row,
+  .recur-add {
+    flex-wrap: wrap;
+  }
+  .acct-row .field-name,
+  .recur-add .field-name {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .acct-row .field-bal,
+  .recur-add .field-bal {
+    flex: 1;
+    width: auto;
+  }
+  .acct-row .sel-sm {
+    flex: 1;
+    width: auto;
+  }
+
+  /* 预算设定行换行 */
+  .budget-set,
+  .budget-set-cat {
+    flex-wrap: wrap;
+  }
+  .budget-set .field {
+    flex: 1 1 100%;
+  }
+  .budget-set-cat .sel {
+    flex: 1 1 100%;
+    width: auto;
+  }
+
+  /* 图表 */
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: var(--m-gap-item);
+  }
+  .chart-box {
+    border-radius: var(--m-r-card);
+    background: var(--m-surface);
+    box-shadow: var(--m-sh-card);
+    padding: 12px;
+  }
 }

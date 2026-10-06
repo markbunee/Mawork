@@ -16,7 +16,6 @@ from ..models.timer import (
     DEFAULT_STATUS,
     DEFAULT_TYPE,
     STATUS_ACTIVE,
-    STATUS_FINISHED,
     STATUS_OPTIONS,
     STATUS_PAUSED,
     TIMER_TYPES,
@@ -65,12 +64,14 @@ def create_timer(
     target_at: str,
     start_at: str,
     status: str = DEFAULT_STATUS,
+    source_type: str = "",
+    source_ref: str = "",
 ) -> dict:
     conn = _get_conn()
     try:
         cur = conn.execute(
-            "INSERT INTO timers (type, title, note, target_at, start_at, status) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO timers (type, title, note, target_at, start_at, status, source_type, source_ref) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 norm_type(type_),
                 title or "",
@@ -78,6 +79,8 @@ def create_timer(
                 target_at or "",
                 start_at or "",
                 norm_status(status),
+                source_type or "",
+                source_ref or "",
             ),
         )
         conn.commit()
@@ -123,6 +126,7 @@ def update_timer(
     try:
         cur = conn.execute(
             "UPDATE timers SET type=?, title=?, note=?, target_at=?, start_at=?, status=?, "
+            "running_since=CASE WHEN ?='countup' THEN running_since ELSE '' END, "
             "updated_at=datetime('now','localtime') WHERE id=?",
             (
                 norm_type(type_),
@@ -131,6 +135,7 @@ def update_timer(
                 target_at or "",
                 start_at or "",
                 norm_status(status),
+                norm_type(type_),
                 tid,
             ),
         )

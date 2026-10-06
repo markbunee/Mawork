@@ -38,6 +38,32 @@ class TaskIn(BaseModel):
     end_date: str = ""
 
 
+class ColumnIn(BaseModel):
+    label: str
+    ftype: str = "text"  # text | date | number | select | check
+    options: list[str] = []
+
+
+class ColumnPatch(BaseModel):
+    label: str | None = None
+    ftype: str | None = None
+    options: list[str] | None = None
+    visible: bool | None = None
+    pinned: bool | None = None
+
+
+class ColumnOrder(BaseModel):
+    ids: list[int]
+
+
+class CellsIn(BaseModel):
+    fields: dict[str, object]
+
+
+class ApplyTemplate(BaseModel):
+    name: str
+
+
 def _validate_dates(start_date: str, end_date: str):
     """开始日期 ≤ 结束日期。两者均可为空，若都填写则校验。"""
     if not start_date or not end_date:
@@ -82,6 +108,79 @@ def delete_task(tid: int):
     if not planpool.delete_task(tid):
         raise HTTPException(status_code=404, detail="任务不存在")
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# 灵活列（自由增删 / 重排 / 类型 / 可见性）
+# ---------------------------------------------------------------------------
+@router.get("/columns")
+def columns():
+    return planpool.list_columns()
+
+
+@router.post("/columns")
+def create_column(payload: ColumnIn):
+    return planpool.add_column(payload.label, payload.ftype, payload.options)
+
+
+@router.put("/columns/order")
+def order_columns(payload: ColumnOrder):
+    planpool.set_columns_order(payload.ids)
+    return planpool.list_columns()
+
+
+@router.put("/columns/{cid}")
+def patch_column(cid: int, payload: ColumnPatch):
+    col = planpool.update_column(
+        cid,
+        label=payload.label,
+        ftype=payload.ftype,
+        options=payload.options,
+        visible=payload.visible,
+        pinned=payload.pinned,
+    )
+    if col is None:
+        raise HTTPException(status_code=404, detail="列不存在")
+    return col
+
+
+@router.delete("/columns/{cid}")
+def remove_column(cid: int):
+    if not planpool.delete_column(cid):
+        raise HTTPException(status_code=400, detail="内置列不可删除")
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# 自定义列单元格
+# ---------------------------------------------------------------------------
+@router.put("/tasks/{tid}/cells")
+def put_cells(tid: int, payload: CellsIn):
+    planpool.upsert_cells(tid, payload.fields)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# 预设列模板
+# ---------------------------------------------------------------------------
+@router.get("/templates")
+def templates():
+    return planpool.list_templates()
+
+
+@router.post("/templates/apply")
+def apply(payload: ApplyTemplate):
+    return planpool.apply_template(payload.name)
+
+
+class ApplyColumns(BaseModel):
+    columns: list = []
+
+
+@router.post("/templates/apply_json")
+def apply_json(payload: ApplyColumns):
+    """按列定义 JSON 重建自定义列（统一模板库 E3 的「任务表」模板走此接口）。"""
+    return planpool.apply_columns_json(payload.columns)
 
 
 # ---------------------------------------------------------------------------

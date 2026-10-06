@@ -75,7 +75,7 @@
 }
 /* 各类型用深浅区分，不引入彩色 */
 .tm-type.countdown { background: #efe7da; color: #8a6d3b; }
-.tm-type.countup { background: #e7ece6; color: #3f6b45; }
+.tm-type.countup { background: #e7ece6; color: #4f7a45; }
 .tm-type.countdown_days { background: #e6e9ef; color: #3b507a; }
 .tm-type.countup_days { background: #efe6ec; color: #7a3b62; }
 
@@ -114,13 +114,27 @@
 .tm-note {
   font-size: 13px;
   color: var(--ink-soft);
-  background: #faf8f4;
+  background: #f7f3ea;
   border-radius: 8px;
   padding: 8px 10px;
   white-space: pre-wrap;
   word-break: break-all;
   max-height: 72px;
   overflow: auto;
+}
+
+.tm-source {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.tm-source:hover {
+  filter: brightness(0.97);
 }
 
 .tm-actions {
@@ -159,8 +173,8 @@
   color: #8a6d3b;
 }
 .tm-btn.danger:hover {
-  border-color: #b4553f;
-  color: #b4553f;
+  border-color: #b8503a;
+  color: #b8503a;
 }
 
 /* ---------- 统计区 ---------- */
@@ -241,7 +255,7 @@
   font-size: 13px;
 }
 .tm-tt-head {
-  background: #f4f2ed;
+  background: #efe8da;
   color: var(--ink-faint);
   font-weight: 600;
 }
@@ -288,11 +302,87 @@
   border-radius: 8px;
   padding: 8px 10px;
   outline: none;
-  background: #fff;
+  background: #fbf8f2;
   width: 100%;
   box-sizing: border-box;
   resize: vertical;
 }
 .field:focus {
   border-color: var(--accent);
+}
+
+/* ===== 手机端（≤768px）：单列卡片流 ===== */
+@media (max-width: 768px) {
+  .tm-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .tm-create-btn {
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: var(--m-accent-soft);
+    color: var(--m-accent);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    cursor: pointer;
+  }
+  .tm-hint {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    line-height: 1.6;
+  }
+
+  .tm-cards {
+    grid-template-columns: 1fr;
+    gap: var(--m-gap-item);
+  }
+  .tm-card {
+    padding: 16px;
+  }
+  .tm-display {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--m-ink);
+  }
+  .tm-title {
+    font-size: var(--m-t-section);
+    font-weight: 600;
+  }
+  .tm-type {
+    border-radius: var(--m-r-pill);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+  }
+
+  .tm-stats {
+    padding: 16px;
+  }
+  .tm-stats-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .tm-stats-title {
+    font-size: var(--m-t-section);
+    font-weight: 600;
+  }
+  /* 粒度切换轨道样式由 mobile.css 统一提供 */
+  .tm-gran-btn {
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: transparent;
+    color: var(--m-ink-2);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 16px;
+    cursor: pointer;
+  }
+  .tm-gran-btn.active {
+    background: var(--m-surface);
+    color: var(--m-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08);
+  }
 }

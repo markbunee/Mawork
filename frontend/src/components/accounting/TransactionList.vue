@@ -17,6 +17,23 @@ const total = computed(() =>
   props.list.reduce((s, t) => s + t.amount, 0).toFixed(2),
 )
 
+// 报销类条目的细分：垫付合计 / 已收回 / 未收回（按单笔 remaining 汇总）。
+const reimburseSubtotal = computed(() => {
+  const items = props.list.filter((t) => t.kind === 'reimburse')
+  if (!items.length) return null
+  let fronted = 0
+  let collected = 0
+  for (const t of items) {
+    fronted += t.amount
+    collected += t.reimbursed ?? 0
+  }
+  return {
+    fronted: Math.round(fronted * 100) / 100,
+    collected: Math.round(collected * 100) / 100,
+    outstanding: Math.round((fronted - collected) * 100) / 100,
+  }
+})
+
 function kindClass(kind: string) {
   return `kind-${kind}`
 }
@@ -125,6 +142,13 @@ async function onDelete(tx: Transaction) {
     <div class="list-sum">
       <span class="sum-label">小计</span>
       <span class="sum-value">¥ {{ total }}</span>
+      <template v-if="reimburseSubtotal">
+        <span class="sum-reimburse">
+          垫付 {{ reimburseSubtotal.fronted.toFixed(2) }} ·
+          已收回 {{ reimburseSubtotal.collected.toFixed(2) }} ·
+          未收回 <b>{{ reimburseSubtotal.outstanding.toFixed(2) }}</b>
+        </span>
+      </template>
     </div>
 
     <div class="tx-table-scroll">
@@ -146,6 +170,7 @@ async function onDelete(tx: Transaction) {
           <td class="cell-date">{{ tx.date }}</td>
           <td>
             <span class="cat-chip" :class="kindClass(tx.kind)">{{ tx.category }}</span>
+            <span v-if="tx.category2" class="cat-sub">{{ tx.category2 }}</span>
           </td>
           <td class="cell-note">{{ tx.note || '—' }}</td>
           <td class="col-amount amount">

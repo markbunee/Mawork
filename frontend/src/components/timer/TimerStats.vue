@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import * as echarts from 'echarts'
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { Stats } from '@/api/timer'
+import { loadEcharts, type ECharts } from '@/utils/echarts'
 
 const props = defineProps<{
   stats: Stats | null
@@ -9,7 +9,9 @@ const props = defineProps<{
 }>()
 
 const chartEl = ref<HTMLElement | null>(null)
-let chart: echarts.ECharts | null = null
+let chart: ECharts | null = null
+// 异步加载 echarts 期间组件可能已卸载，用此标记避免给已卸载节点 init
+let disposed = false
 
 function fmtHm(sec: number): string {
   const h = Math.floor(sec / 3600)
@@ -49,8 +51,10 @@ function render() {
   })
 }
 
-function initChart() {
+async function initChart() {
   if (chartEl.value && !chart) {
+    const echarts = await loadEcharts()
+    if (disposed || !chartEl.value) return // 加载完成前已卸载，放弃初始化
     chart = echarts.init(chartEl.value)
   }
   render()
@@ -65,6 +69,7 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
 })
 onUnmounted(() => {
+  disposed = true
   window.removeEventListener('resize', onResize)
   chart?.dispose()
   chart = null

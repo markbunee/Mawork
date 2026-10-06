@@ -1,0 +1,11 @@
+.git
+frontend
+workspaces
+logs
+.codebuddy
+*.md
+start.sh
+**/__pycache__
+**/*.pyc
+.env
+.env.*

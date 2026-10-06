@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   startTimer,
@@ -18,6 +19,11 @@ const emit = defineEmits<{
   (e: 'edit', t: Timer): void
   (e: 'changed'): void
 }>()
+
+const router = useRouter()
+function goSource() {
+  if (props.timer.source_type === 'planpool') router.push('/planpool')
+}
 
 function fmtDuration(sec: number): string {
   const s = Math.max(0, Math.floor(sec))
@@ -125,6 +131,9 @@ function doEdit() {
     </div>
 
     <div v-if="timer.note" class="tm-note">{{ timer.note }}</div>
+    <div v-if="timer.source_type === 'planpool'" class="tm-source" title="跳转到关联日程任务" @click="goSource">
+      📋 来自日程任务 #{{ timer.source_ref }}
+    </div>
 
     <div class="tm-actions">
       <template v-if="isCountup">

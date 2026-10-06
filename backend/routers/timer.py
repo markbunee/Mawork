@@ -39,12 +39,15 @@ class TimerIn(BaseModel):
     target_at: str = ""
     start_at: str = ""
     status: str = DEFAULT_STATUS
+    source_type: str = ""
+    source_ref: str = ""
 
 
 @router.post("/timers")
 def create(payload: TimerIn):
     return svc.create_timer(
-        payload.type, payload.title, payload.note, payload.target_at, payload.start_at, payload.status
+        payload.type, payload.title, payload.note, payload.target_at, payload.start_at,
+        payload.status, payload.source_type, payload.source_ref,
     )
 
 

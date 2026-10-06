@@ -23,7 +23,6 @@ from ..models.calday import (
     DONE_PREFIX,
     KIND_OPTIONS,
     KIND_TEXT,
-    KIND_TASK,
     SOURCE_MANUAL,
     SOURCE_PLAN,
     TODO_PREFIX,

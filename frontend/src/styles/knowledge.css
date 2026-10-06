@@ -1,0 +1,35 @@
+/* ==========================================================================
+   knowledge.css — 知识中心（资料 + 文章合并入口）
+   --------------------------------------------------------------------------
+   只负责外层容器与主体布局；
+   顶部切换条已改用公共组件 SegmentedControl（样式见 segmented.css），
+   资料树 / 文章列表的样式仍由各自的 resources.css、articles.css 负责。
+   ========================================================================== */
+
+.knowledge {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ===== 主体：占满剩余高度 ===== */
+.kn-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kn-body > * {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ===== 手机端 ===== */
+@media (max-width: 768px) {
+  .knowledge {
+    gap: 12px;
+  }
+}

@@ -9,14 +9,27 @@ const props = defineProps<{
   isToday: boolean
   net: number | null
   lines: CalLine[]
+  habitDone?: number
+  habitTotal?: number
 }>()
 
-const emit = defineEmits<{ (e: 'change'): void }>()
+const emit = defineEmits<{ (e: 'change'): void; (e: 'dayclick'): void }>()
 
-// 新建的行先用负数 id 占位，保存后由服务端 id 回填，保证 :key 稳定、不丢焦点
+// 新建的行先用负数 id 占位；cid 是前端稳定键（服务端每次保存会重建 id，
+// 不能用 line.id 作 :key，否则自动保存后整格文本域被销毁重建、丢焦点/跳动）。
 let uid = -1
+let cidSeq = 0
+function nextCid(): string {
+  return `c${++cidSeq}`
+}
+function ensureCid(line: CalLine): string {
+  if (!line.cid) line.cid = nextCid()
+  return line.cid
+}
 function newLine(kind: CalLineKind): CalLine {
-  return { id: uid--, date: props.date, sort: 0, kind, text: '', done: false }
+  const line: CalLine = { id: uid--, date: props.date, sort: 0, kind, text: '', done: false }
+  line.cid = nextCid()
+  return line
 }
 
 const taEls: (HTMLTextAreaElement | null)[] = []
@@ -52,13 +65,19 @@ function applyPendingFocus() {
   })
 }
 
+// 仅在「结构变化」（增/删行、切换月份）时重算高度与回填焦点；
+// 服务端保存会重建 line.id，但不能因此触发（cid 稳定），否则整格刷新、丢焦点。
 watch(
-  () => props.lines.map((l) => l.id).join(','),
+  () => {
+    props.lines.forEach(ensureCid)
+    return props.lines.map((l) => l.cid).join(',')
+  },
   () => {
     taEls.length = props.lines.length
     resizeAll()
     applyPendingFocus()
   },
+  { immediate: true },
 )
 
 function onWindowResize() {
@@ -244,16 +263,28 @@ function onPaste(ev: ClipboardEvent) {
 <template>
   <div class="cal-cell" :class="{ 'out-month': !inMonth, today: isToday }">
     <div class="cal-cell-head">
-      <span class="cal-daynum">{{ dayNum }}</span>
+      <span class="cal-daynum" title="点击查看 / 打卡习惯" @click="emit('dayclick')">{{ dayNum }}</span>
       <span v-if="net !== null" class="cal-net" :class="net >= 0 ? 'pos' : 'neg'">
         {{ net >= 0 ? '+' : '' }}{{ net }}
       </span>
     </div>
-
     <div class="cal-lines">
+      <!-- 习惯条目：与任务行同款方框，但整体红色；点击打卡 / 查看习惯 -->
+      <div
+        v-if="habitTotal"
+        class="cal-line cal-habit-row"
+        title="点击打卡 / 查看习惯"
+        @click="emit('dayclick')"
+      >
+        <span class="cal-gutter">
+          <span class="cal-habit-check" :class="{ on: (habitDone ?? 0) >= habitTotal }"></span>
+        </span>
+        <span class="cal-habit-label">习惯 {{ habitDone ?? 0 }}/{{ habitTotal }}</span>
+      </div>
+
       <div
         v-for="(line, i) in lines"
-        :key="line.id"
+        :key="line.cid"
         class="cal-line"
         :class="{ 'is-task': line.kind === 'task', 'is-done': line.kind === 'task' && line.done }"
       >

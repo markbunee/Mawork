@@ -1,64 +1,87 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import MarkdownIt from 'markdown-it'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getDashboard, type Dashboard } from '@/api/insight'
 import {
-  listYears,
-  getTree,
-  readFile,
-  saveFile,
-  createFolder,
-  deleteItem,
-  type TreeItem,
-} from '@/api/analysis'
-import TreeNode from '@/components/analysis/TreeNode.vue'
+  computeRange,
+  presetLabels,
+  previousRange,
+  shiftAnchor,
+  type RangePreset,
+} from '@/utils/dateRange'
+import OverviewTab from '@/components/analysis/OverviewTab.vue'
+import TrendTab from '@/components/analysis/TrendTab.vue'
+import GoalsPanel from '@/components/analysis/GoalsPanel.vue'
+import ReviewPanel from '@/components/analysis/ReviewPanel.vue'
+import ReportTree from '@/components/analysis/ReportTree.vue'
+import SegmentedControl from '@/components/common/SegmentedControl.vue'
 
-const years = ref<string[]>([])
-const year = ref(new Date().getFullYear().toString())
+type TabKey = 'overview' | 'trend' | 'goals' | 'review' | 'report'
 
-const tree = ref<TreeItem[]>([])
-const activePath = ref('')
-const content = ref('')
+const tabs: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'overview', label: '概览', icon: '📊' },
+  { key: 'trend', label: '趋势', icon: '📈' },
+  { key: 'goals', label: '目标', icon: '🎯' },
+  { key: 'review', label: '复盘', icon: '🪞' },
+  { key: 'report', label: '报告库', icon: '📁' },
+]
+
+const tab = ref<TabKey>('overview')
+const TAB_KEY = 'mawork:analysis:tab'
+
+const presetList = (Object.keys(presetLabels) as RangePreset[]).map((k) => ({
+  key: k,
+  label: presetLabels[k],
+}))
+
+const preset = ref<RangePreset>('week')
+const anchor = ref<Date>(new Date())
+const custom = ref(false)
+const from = ref('')
+const to = ref('')
+
+const data = ref<Dashboard | null>(null)
+const prev = ref<Dashboard | null>(null)
 const loading = ref(false)
-const saving = ref(false)
-const dirty = ref(false)
-const collapsed = ref<Record<string, boolean>>({})
+const reportRef = ref<InstanceType<typeof ReportTree> | null>(null)
+const goalsRef = ref<InstanceType<typeof GoalsPanel> | null>(null)
 
-const md = new MarkdownIt({ html: false, linkify: true })
-const viewMode = ref<'code' | 'preview'>('code')
-const rendered = computed(() => md.render(content.value))
+const range = computed(() =>
+  custom.value && from.value && to.value
+    ? {
+        from: from.value,
+        to: to.value,
+        label: `${from.value} ~ ${to.value}`,
+      }
+    : computeRange(preset.value, anchor.value),
+)
 
-async function loadYears() {
-  const res = await listYears()
-  years.value = res.years
-  if (years.value.length > 0 && !years.value.includes(year.value)) {
-    year.value = years.value[0]
-  }
+function applyPreset(p: RangePreset) {
+  preset.value = p
+  custom.value = false
+  anchor.value = new Date()
 }
 
-async function loadTree() {
-  const res = await getTree(year.value)
-  tree.value = res.tree
+function shift(dir: number) {
+  anchor.value = shiftAnchor(preset.value, anchor.value, dir)
 }
 
-async function changeYear(y: string) {
-  year.value = y
-  activePath.value = ''
-  content.value = ''
-  dirty.value = false
-  await loadTree()
+function useTodayAnchor() {
+  anchor.value = new Date()
 }
 
-async function selectFile(path: string) {
-  if (dirty.value && !confirm('当前有未保存的修改，确定切换吗？')) {
-    return
-  }
+async function load() {
+  if (tab.value === 'goals' || tab.value === 'report' || tab.value === 'review') return
   loading.value = true
   try {
-    const res = await readFile(year.value, path)
-    activePath.value = path
-    content.value = res.content
-    dirty.value = false
+    const r = range.value
+    const prevR = previousRange(preset.value, anchor.value)
+    const [cur, before] = await Promise.all([
+      getDashboard(r.from, r.to),
+      getDashboard(prevR.from, prevR.to),
+    ])
+    data.value = cur
+    prev.value = before
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '加载失败')
   } finally {
@@ -66,185 +89,109 @@ async function selectFile(path: string) {
   }
 }
 
-function toggleFolder(path: string) {
-  collapsed.value[path] = !collapsed.value[path]
+async function onReviewSaved() {
+  tab.value = 'report'
+  await nextTick()
+  await reportRef.value?.reload()
 }
 
-function ensureMdSuffix(name: string): string {
-  return name.toLowerCase().endsWith('.md') ? name : `${name}.md`
-}
 
-async function newFile() {
-  const input = prompt('输入新文件路径（支持子文件夹，如：月度复盘/2026年9月月度复盘报告）')
-  if (!input || !input.trim()) return
-  const path = ensureMdSuffix(input.trim().replace(/^\/+|\/+$/g, ''))
-  try {
-    await saveFile(year.value, path, `# ${path.split('/').pop()!.replace(/\.md$/i, '')}\n`)
-    await loadTree()
-    ElMessage.success('已创建')
-    await selectFile(path)
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '创建失败')
+function onCustomChange() {
+  if (from.value && to.value && from.value <= to.value) {
+    custom.value = true
   }
 }
 
-async function newFolder() {
-  const input = prompt('输入新文件夹路径（如：月度复盘）')
-  if (!input || !input.trim()) return
-  const path = input.trim().replace(/^\/+|\/+$/g, '')
-  try {
-    await createFolder(year.value, path)
-    await loadTree()
-    ElMessage.success('已创建')
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '创建失败')
-  }
-}
-
-async function onDelete(item: TreeItem) {
-  const label = item.type === 'dir' ? '空文件夹' : '文件'
-  if (!confirm(`确定删除${label}「${item.name}」吗？`)) return
-  try {
-    await deleteItem(year.value, item.path)
-    if (activePath.value === item.path) {
-      activePath.value = ''
-      content.value = ''
-      dirty.value = false
+watch([tab, () => range.value.from, () => range.value.to], load)
+// post-flush：等 DOM 打补丁后再拿 reportRef，否则切到报告库时 ref 仍为 null
+watch(
+  tab,
+  (t) => {
+    try {
+      localStorage.setItem(TAB_KEY, t)
+    } catch {
+      /* 忽略存储异常 */
     }
-    await loadTree()
-    ElMessage.success('已删除')
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '删除失败')
-  }
-}
+    if (t === 'report') void reportRef.value?.reload()
+    if (t === 'goals') void goalsRef.value?.load()
+  },
+  { flush: 'post' },
+)
 
-async function save() {
-  if (!activePath.value) return
-  saving.value = true
+onMounted(() => {
   try {
-    await saveFile(year.value, activePath.value, content.value)
-    dirty.value = false
-    ElMessage.success('已保存')
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '保存失败')
-  } finally {
-    saving.value = false
+    const saved = localStorage.getItem(TAB_KEY)
+    if (saved === 'overview' || saved === 'trend' || saved === 'goals' || saved === 'review' || saved === 'report') {
+      tab.value = saved
+    }
+  } catch {
+    /* 忽略存储异常 */
   }
-}
-
-function onKeydown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault()
-    save()
-  }
-}
-
-onMounted(async () => {
-  await loadYears()
-  await loadTree()
+  const r = computeRange('week', anchor.value)
+  from.value = r.from
+  to.value = r.to
+  void load()
+  // 初次若停在报告库 tab，等一帧让 ReportTree 挂载后再初始化
+  void nextTick().then(() => reportRef.value?.init())
 })
 </script>
 
 <template>
-  <div class="daily" @keydown="onKeydown">
-    <div class="daily-list analysis-list">
-      <div class="list-header">
-        <select v-model="year" class="year-select" @change="changeYear(year)">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}年</option>
-        </select>
+  <div class="an">
+    <!-- 时间维度 -->
+    <div class="an-range">
+      <div class="an-presets">
+        <button
+          v-for="p in presetList"
+          :key="p.key"
+          class="an-preset"
+          :class="{ on: !custom && preset === p.key }"
+          @click="applyPreset(p.key)"
+        >{{ p.label }}</button>
       </div>
 
-      <div class="analysis-actions">
-        <button class="btn-new" @click="newFile">＋ 文件</button>
-        <button class="btn-new" @click="newFolder">＋ 文件夹</button>
-      </div>
-
-      <div class="daily-tree">
-        <div v-if="tree.length === 0" class="empty-tip">
-          还没有报告，点「＋ 文件」新建；复盘/计划报告会自动写入这里
-        </div>
-        <TreeNode
-          v-for="item in tree"
-          :key="item.path"
-          :item="item"
-          :active-path="activePath"
-          :collapsed="collapsed"
-          @select="selectFile"
-          @toggle="toggleFolder"
-          @delete="onDelete"
+      <div class="an-range-nav">
+        <button class="an-btn" title="上一区间" @click="shift(-1)">‹</button>
+        <input
+          v-model="from"
+          type="date"
+          class="an-date"
+          @change="onCustomChange"
         />
-      </div>
-    </div>
-
-    <div class="daily-editor">
-      <div class="editor-head">
-        <div class="editor-title">
-          <span class="date-label">{{ activePath || '未选择文件' }}</span>
-        </div>
-        <div class="editor-actions">
-          <span v-if="dirty" class="dirty-hint">未保存</span>
-          <button
-            class="switch-btn"
-            :class="{ active: viewMode === 'preview' }"
-            @click="viewMode = viewMode === 'code' ? 'preview' : 'code'"
-          >{{ viewMode === 'code' ? '预览' : '代码' }}</button>
-          <button class="btn-save" :disabled="saving || !activePath" @click="save">
-            {{ saving ? '保存中…' : '保存' }}
-          </button>
-        </div>
+        <span class="an-range-sep">~</span>
+        <input v-model="to" type="date" class="an-date" @change="onCustomChange" />
+        <button class="an-btn" title="下一区间" @click="shift(1)">›</button>
+        <button class="an-btn" @click="useTodayAnchor">今天</button>
+        <button class="an-btn primary" :disabled="loading" @click="load">
+          {{ loading ? '汇总中…' : '重新汇总' }}
+        </button>
       </div>
 
-      <div v-if="!activePath" class="res-empty">
-        从左侧选择一份报告，或新建文件
-      </div>
-      <template v-else>
-        <textarea
-          v-if="viewMode === 'code'"
-          v-model="content"
-          class="editor-textarea"
-          spellcheck="false"
-          placeholder="Markdown 内容…"
-          @input="dirty = true"
-        ></textarea>
-        <div v-else class="md-body" v-html="rendered"></div>
-      </template>
+      <div class="an-range-label">{{ range.label }}</div>
     </div>
+
+    <!-- Tab：通用分段控件（指示块宽度按项数自动计算） -->
+    <div class="an-tabs-bar">
+      <SegmentedControl v-model="tab" :items="tabs" aria-label="复盘模块切换" />
+    </div>
+
+    <div class="an-body">
+      <OverviewTab v-if="tab === 'overview'" :data="data" :prev="prev" :loading="loading" />
+      <TrendTab v-else-if="tab === 'trend'" :data="data" />
+      <GoalsPanel v-else-if="tab === 'goals'" ref="goalsRef" />
+      <ReviewPanel v-else-if="tab === 'review'" @saved="onReviewSaved" />
+      <ReportTree v-else ref="reportRef" />
+    </div>
+
+    <!-- workspaces 备份列表 / 一键回滚 -->
   </div>
 </template>
 
 <style scoped>
-.analysis-list {
-  width: 260px;
-}
-
-.analysis-actions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.tree-children {
-  padding-left: 14px;
-}
-
-.tree-file {
+/* 备份/导出入口已下线，此处只剩分段控件本身 */
+.an-tabs-bar {
   display: flex;
   align-items: center;
-}
-
-.tree-file .date-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tree-node :deep(.del-btn) {
-  opacity: 0;
-}
-
-.tree-node:hover > .month-head .del-btn,
-.tree-node:hover > .tree-file .del-btn {
-  opacity: 1;
+  margin-bottom: 14px;
 }
 </style>

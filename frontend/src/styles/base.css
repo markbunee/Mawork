@@ -1,24 +1,5 @@
-/* base：CSS 变量、整体布局、通用按钮（btn-new/btn-save/btn-export 等） */
-
-:root {
-  --bg: #f6f4f0;
-  --surface: #ffffff;
-  /* 配色整体加深，提高正文与次级文字的对比度 */
-  --ink: #1b1917;
-  --ink-soft: #55504a;
-  --ink-faint: #7d766c;
-  --line: #ded9d0;
-  --grid: #e4e0d8;
-  --accent: #6f6047;
-  --accent-soft: #ebe4d6;
-  --radius: 12px;
-
-  /* 侧边栏收窄，把宽度让给右侧内容 */
-  --sidebar-w: 128px;
-
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
-  --font-sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-}
+/* base：全局重置、桌面端整体布局、通用按钮（btn-new/btn-save/btn-export 等）
+   注意：设计令牌已抽到 tokens.css，改配色/字号/间距请去那里。 */
 
 * {
   box-sizing: border-box;
@@ -92,14 +73,15 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 12px 8px;
+  padding: 12px 14px;
   border-radius: 10px;
   text-decoration: none;
   color: var(--ink-soft);
   font-size: 15px;
-  transition: background 0.15s, color 0.15s;
+  font-weight: 500;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .nav-item:hover {
@@ -116,11 +98,6 @@ body {
 .nav-item.disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-.nav-icon {
-  font-size: 18px;
-  line-height: 1;
 }
 
 .nav-badge {
@@ -163,9 +140,89 @@ body {
   color: var(--ink);
 }
 
+/* 顶栏左侧：标题 + 副标题（今天页显示周次，替代重复的日期） */
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.page-sub {
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .topbar-date {
   font-size: 13px;
   color: var(--ink-faint);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topbar-search {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 0 14px;
+  height: 38px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.topbar-search:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.topbar-user {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* 顶栏文字入口（如管理员的「用户管理」） */
+.topbar-link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 12px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.topbar-link:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.logout-btn {
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.logout-btn:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-color: var(--accent);
 }
 
 /* 内容区整页下拉 */
@@ -181,3 +238,6 @@ body {
 .page-body > * {
   flex-shrink: 0;
 }
+
+/* 移动端（≤768px）视觉体系已迁移至 styles/mobile.css（在 main.css 中最后引入）。
+   旧的底部 Tab / 抽屉组件已下线，相关样式一并移除，避免死代码。 */

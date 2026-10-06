@@ -1,0 +1,459 @@
+/* ==========================================================================
+   mobile.css — 移动端（≤768px）外壳与跨模块基建
+   --------------------------------------------------------------------------
+   职责边界（重要）：
+     ✅ 放这里：全局基底、页面外壳（顶栏 / 胶囊 Tab 栏 / 内容容器）、
+               弹层组件、跨模块共用的表面与控件（卡片底、空状态、Markdown 正文）
+     ❌ 不放这里：某个模块自己的布局与细节 —— 就近写在 <module>.css 的
+                @media (max-width: 768px) 块里，改模块时只开一个文件
+
+   桌面端完全不受影响：本文件全部内容包在 @media (max-width: 768px) 内
+   在 main.css 中最后引入，作为移动端跨模块的兜底层
+   ========================================================================== */
+
+/* 移动端专属元素的默认态（桌面隐藏） */
+.m-appbar,
+.m-tabbar,
+.m-mask {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* ======================================================================
+     1. 全局基底
+     ====================================================================== */
+  html,
+  body,
+  #app {
+    height: auto;
+    min-height: 100%;
+  }
+
+  body {
+    font-size: var(--m-t-body);
+    color: var(--m-ink);
+    background: var(--m-bg);
+    /* 顶部固定栏 + 底部悬浮 Tab，页面自身滚动 */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS 聚焦时字号 <16px 会触发页面自动缩放，这里统一兜底；
+     密集表格（计划池 Excel 网格）例外，保持紧凑并依赖横向滚动 */
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .pp-excel input,
+  .pp-excel select,
+  .tm-task-table input {
+    font-size: 14px;
+  }
+
+  /* ======================================================================
+     2. 页面外壳：顶栏 + 内容容器
+     ====================================================================== */
+  .sidebar {
+    display: none;
+  }
+
+  .layout {
+    display: block;
+    height: auto;
+    min-height: 100%;
+    padding-top: calc(56px + env(safe-area-inset-top));
+  }
+
+  /* 桌面顶栏在移动端让位给 .m-appbar */
+  .topbar {
+    display: none;
+  }
+
+  .content {
+    display: block;
+  }
+
+  .m-appbar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    padding-top: env(safe-area-inset-top);
+    background: rgba(245, 242, 236, 0.86);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid transparent;
+  }
+
+  .m-appbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 56px;
+    padding: 0 var(--m-pad-x);
+  }
+
+  .m-appbar-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  /* 全站标题字号统一 */
+  .m-appbar-title {
+    margin: 0;
+    font-size: var(--m-t-title);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: var(--m-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .m-appbar-sub {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    letter-spacing: 0.2px;
+  }
+
+  /* 顶栏动作按钮：纯文字胶囊，去掉多余图标 */
+  .m-appbar-backup,
+  .m-appbar-bell,
+  .m-appbar-search {
+    position: relative;
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: var(--m-accent-soft);
+    color: var(--m-accent);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .m-avatar {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: var(--m-r-pill);
+    background: var(--m-accent-grad);
+    color: var(--m-ink-inv);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(122, 78, 45, 0.24);
+  }
+
+  /* 内容容器：左右内边距统一在此承担，各模块内部不再自行加横向 padding */
+  .page-body {
+    display: block;
+    padding: 14px var(--m-pad-x) calc(108px + env(safe-area-inset-bottom));
+    overflow-y: visible;
+  }
+
+  .page-body > * {
+    flex-shrink: 1;
+  }
+
+  /* ======================================================================
+     3. 底部胶囊 Tab 栏
+     3–5 个顶层入口；选中态用实心填充，不用单纯变色
+     ====================================================================== */
+  .m-tabbar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+
+  .m-tabbar-pill {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    height: 62px;
+    padding: 4px;
+    border-radius: 36px;
+    border: 1px solid var(--m-line);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    box-shadow: var(--m-sh-bar);
+    pointer-events: auto;
+  }
+
+  .m-tab {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 100%;
+    border: none;
+    border-radius: 26px;
+    background: transparent;
+    text-decoration: none;
+    color: var(--m-ink-3);
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .m-tab.on {
+    background: var(--m-accent);
+    color: var(--m-ink-inv);
+    box-shadow: 0 3px 10px rgba(122, 78, 45, 0.28);
+  }
+
+  .m-tab-label {
+    font-size: var(--m-t-tab);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+
+  /* ======================================================================
+     4. 弹层 Sheet（更多 / 账户）
+     ====================================================================== */
+  .m-mask {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    align-items: flex-end;
+    background: rgba(24, 20, 16, 0.4);
+    animation: m-fade 0.18s ease-out;
+  }
+
+  @keyframes m-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .m-sheet {
+    width: 100%;
+    background: var(--m-surface);
+    border-radius: 22px 22px 0 0;
+    padding: 8px var(--m-pad-x) calc(20px + env(safe-area-inset-bottom));
+    animation: m-up 0.24s cubic-bezier(0.22, 0.8, 0.3, 1);
+  }
+
+  @keyframes m-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  .m-sheet-grab {
+    width: 36px;
+    height: 4px;
+    margin: 0 auto 14px;
+    border-radius: 999px;
+    background: var(--m-line);
+  }
+
+  .m-sheet-title {
+    margin: 0 0 14px;
+    font-size: var(--m-t-section);
+    font-weight: 600;
+    color: var(--m-ink);
+  }
+
+  .m-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: var(--m-r-card);
+    background: var(--m-surface-2);
+  }
+
+  .m-account-avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: var(--m-r-pill);
+    background: var(--m-accent-grad);
+    color: var(--m-ink-inv);
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .m-account-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--m-ink);
+    word-break: break-all;
+  }
+
+  .m-account-sub {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+  }
+
+  .m-sheet-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: var(--m-r-ctrl);
+    background: var(--m-sunken);
+    color: var(--m-ink);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .m-sheet-btn.danger {
+    background: var(--m-habit-soft);
+    color: var(--m-habit);
+    font-weight: 600;
+  }
+
+  .m-more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .m-more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 6px;
+    border: 1px solid var(--m-line-soft);
+    border-radius: var(--m-r-card);
+    background: var(--m-surface-2);
+    text-decoration: none;
+    color: var(--m-ink);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .m-more-item:active {
+    background: var(--m-accent-soft);
+  }
+
+  /* ======================================================================
+     5. 跨模块共用的表面与控件
+     —— 只放「多个模块都要用」的，模块自己的样式不放这里
+     ====================================================================== */
+
+  /* 卡片底：统一白底 + 圆角 + 柔和投影，取代桌面端的描边卡片
+     注意：列表里的容器，模块文件不要再各自设 background / border-radius / box-shadow。
+     .overview（记账）与 .board-summary（习惯）用「1px 间隙 + 底色」做分隔线，
+     需要自己控制 background，故不在此列，由各自模块文件完整拥有。 */
+  .home-calendar,
+  .tm-stats,
+  .charts-wrap,
+  .tx-form,
+  .tx-list-wrap,
+  .asset-card,
+  .habit-card,
+  .tm-card,
+  .pp-excel,
+  .daily-list {
+    background: var(--m-surface);
+    border-radius: var(--m-r-card);
+    box-shadow: var(--m-sh-card);
+  }
+
+  /* 各模块页面统一纵向堆叠，区块间距由容器承担 */
+  .home,
+  .accounting,
+  .habit-board,
+  .timer,
+  .planpool,
+  .daily,
+  .resources,
+  .articles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--m-gap-section);
+  }
+
+  /* 数字统一等宽，避免数值变化时抖动 */
+  .ov-value,
+  .asset-value,
+  .sum-value,
+  .streak-num,
+  .tm-display,
+  .tm-total,
+  .bc-value {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 胶囊分段控件轨道：记账视图切换 / 分类筛选 / 计时粒度共用 */
+  .view-switch,
+  .kind-filter,
+  .kind-tabs,
+  .tm-gran {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: var(--m-r-pill);
+    background: var(--m-sunken);
+  }
+
+  /* Markdown 正文：日报 / 资料 / 文章共用 */
+  .md-body {
+    padding: 18px 16px;
+    font-size: var(--m-t-body);
+    line-height: 1.75;
+    color: var(--m-ink-2);
+  }
+
+  /* 导出按钮：记账 / 日程共用 */
+  .btn-export {
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-sm);
+    background: var(--m-surface);
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-2);
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+
+  /* 空状态：各模块统一 */
+  .empty,
+  .empty-tip,
+  .tm-empty,
+  .empty-habit,
+  .pp-empty {
+    padding: 28px 16px;
+    border-radius: var(--m-r-card);
+    background: var(--m-surface);
+    box-shadow: var(--m-sh-card);
+    color: var(--m-ink-3);
+    font-size: var(--m-t-meta);
+    text-align: center;
+  }
+}

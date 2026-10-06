@@ -1,116 +1,130 @@
-"""文章业务逻辑：按 Markdown 一级标题切块、读写、新建。
+"""文章业务逻辑：文章以「每篇一条记录」存入 articles.db。
 
-存储模型：一个年份一个文件（如 workspaces/2026/Article.md），
-文件内以「# 标题」作为每篇文章的分隔标题。
-定位用标题文本（假设标题唯一）。
+字段：year / date / title / content(markdown) / created_at / updated_at。
+同一 year 内 title 唯一；编辑标题时若与现有标题不同则视为「改名」（迁移记录）。
+
+相比旧实现（按年份单个 Article.md、文件内 # 标题切块），入库后：
+- 支持按 year / date 维度聚合，便于复盘检索；
+- 改写为整行 UPDATE，不再重写整个文件，避免并发相互覆盖。
 """
 
-import re
-from pathlib import Path
-
 from .. import config
+from ..db import open_conn
 
-# 一级标题正则：# 标题
-HEADING_RE = re.compile(r"^#\s+(.+?)\s*$")
-
-
-def article_file(year: str) -> Path:
-    """返回某年的文章文件路径。"""
-    return config.WORKSPACES_DIR / year / "Article.md"
-
-
-def split_articles(text: str) -> list[dict]:
-    """按 # 一级标题切块，返回 [{title, heading, body}]。
-
-    - title：标题正文（不含 # ）
-    - heading：完整标题行（含 # ）
-    - body：正文（不含标题行）
-    """
-    lines = text.splitlines()
-    blocks: list[dict] = []
-    current = None
-    for line in lines:
-        m = HEADING_RE.match(line.strip())
-        if m:
-            if current is not None:
-                blocks.append(current)
-            current = {"title": m.group(1).strip(), "heading": line.strip(), "body": []}
-        else:
-            if current is not None:
-                current["body"].append(line)
-    if current is not None:
-        blocks.append(current)
-
-    for b in blocks:
-        while b["body"] and not b["body"][0].strip():
-            b["body"].pop(0)
-        while b["body"] and not b["body"][-1].strip():
-            b["body"].pop()
-        b["body"] = "\n".join(b["body"])
-    return blocks
-
-
-def render_block(heading: str, body: str) -> str:
-    body = body.strip("\n")
-    return f"{heading}\n\n{body}\n" if body else f"{heading}\n\n"
+# 索引类全量扫描的自我保护上限（仅影响搜索 / 标签的覆盖范围，不动数据）
+INDEX_MAX_ARTICLES = 300
+INDEX_MAX_CONTENT_BYTES = 4 * 1024 * 1024  # 正文合计 4 MiB
 
 
 def list_articles(year: str) -> list[dict]:
-    """列出某年全部文章的标题列表（目录）。"""
-    f = article_file(year)
-    if not f.exists():
-        return []
-    blocks = split_articles(f.read_text(encoding="utf-8"))
-    return [{"title": b["title"]} for b in blocks]
+    """列出某年全部文章（目录）。"""
+    with open_conn(config.ARTICLES_DB) as conn:
+        rows = conn.execute(
+            "SELECT id, year, date, title, updated_at "
+            "FROM articles WHERE year = ? ORDER BY date DESC, id DESC",
+            (year,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def all_articles_for_index() -> list[dict]:
+    """供搜索 / 标签聚合使用的文章列表（含正文）。
+
+    文章已入库为「每篇一条记录」，不再从 Article.md 解析。
+    返回字段：year / title / content。
+
+    带正文全量载入会随文章数线性吃内存（长文尤其明显），
+    故设双重预算，对齐 search.SEARCH_MAX_FILES 的自律做法：
+    条数封顶 + 正文合计字节封顶。超出的部分**静默截断**，
+    只影响搜索/标签的覆盖范围，不影响任何用户数据。
+    """
+    with open_conn(config.ARTICLES_DB) as conn:
+        rows = conn.execute(
+            "SELECT year, title, content FROM articles "
+            "ORDER BY year DESC, updated_at DESC LIMIT ?",
+            (INDEX_MAX_ARTICLES,),
+        ).fetchall()
+    out: list[dict] = []
+    budget = INDEX_MAX_CONTENT_BYTES
+    for r in rows:
+        content = r["content"] or ""
+        if budget <= 0:
+            break
+        out.append({
+            "year": r["year"],
+            "title": r["title"],
+            "content": content[:budget],
+        })
+        budget -= len(content)
+    return out
 
 
 def get_article(year: str, title: str) -> dict | None:
-    """获取某篇（按标题定位）。找不到返回 None。"""
-    f = article_file(year)
-    if not f.exists():
-        return None
-    for b in split_articles(f.read_text(encoding="utf-8")):
-        if b["title"] == title:
-            return {"title": b["title"], "heading": b["heading"], "body": b["body"]}
-    return None
+    """获取某篇（按 year + title 定位）。找不到返回 None。"""
+    with open_conn(config.ARTICLES_DB) as conn:
+        r = conn.execute(
+            "SELECT * FROM articles WHERE year = ? AND title = ?", (year, title)
+        ).fetchone()
+        return dict(r) if r else None
 
 
-def upsert_article(year: str, title: str, body: str) -> dict:
-    """新建或更新一篇。标题存在则替换正文，不存在则追加到文件末尾。"""
-    f = article_file(year)
-    f.parent.mkdir(parents=True, exist_ok=True)
+def upsert_article(
+    year: str,
+    title: str,
+    content: str,
+    date: str = "",
+    new_title: str | None = None,
+) -> dict:
+    """新建或更新一篇。
 
-    heading = f"# {title}"
-    new_block = render_block(heading, body)
+    - 标题作为 year 内唯一键；new_title 非空且与 title 不同表示改名。
+    - 改名时若目标标题已被别的文章占用，抛出 ValueError（路由转 409）。
+    """
+    eff = (new_title or title).strip()
+    if not eff:
+        raise ValueError("标题不能为空")
 
-    if f.exists():
-        text = f.read_text(encoding="utf-8")
-        blocks = split_articles(text)
-        if any(b["title"] == title for b in blocks):
-            out = [
-                new_block if b["title"] == title else render_block(b["heading"], b["body"])
-                for b in blocks
-            ]
-            result = "\n".join(x.strip("\n") for x in out if x.strip("\n")) + "\n"
-            f.write_text(result, encoding="utf-8")
+    with open_conn(config.ARTICLES_DB) as conn:
+        cur = conn.execute(
+            "SELECT id FROM articles WHERE year = ? AND title = ?", (year, eff)
+        ).fetchone()
+        same = conn.execute(
+            "SELECT id FROM articles WHERE year = ? AND title = ?", (year, title)
+        ).fetchone()
+        if cur and (not same or cur["id"] != same["id"]):
+            raise ValueError("标题已存在")
+
+        if same:
+            conn.execute(
+                "UPDATE articles SET title = ?, content = ?, date = ?, "
+                "updated_at = datetime('now','localtime') WHERE id = ?",
+                (eff, content, date, same["id"]),
+            )
         else:
-            f.write_text(text.rstrip("\n") + "\n\n" + new_block, encoding="utf-8")
-    else:
-        f.write_text(new_block, encoding="utf-8")
-
-    return {"title": title, "ok": True}
+            conn.execute(
+                "INSERT INTO articles "
+                "(year, date, title, content, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))",
+                (year, date, eff, content),
+            )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM articles WHERE year = ? AND title = ?", (year, eff)
+        ).fetchone()
+        return dict(row)
 
 
 def delete_article(year: str, title: str) -> bool:
     """删除一篇。返回是否删除成功。"""
-    f = article_file(year)
-    if not f.exists():
-        return False
-    text = f.read_text(encoding="utf-8")
-    blocks = split_articles(text)
-    if not any(b["title"] == title for b in blocks):
-        return False
-    out = [render_block(b["heading"], b["body"]) for b in blocks if b["title"] != title]
-    result = "\n".join(x.strip("\n") for x in out if x.strip("\n")) + "\n"
-    f.write_text(result, encoding="utf-8")
-    return True
+    with open_conn(config.ARTICLES_DB) as conn:
+        r = conn.execute(
+            "SELECT id FROM articles WHERE year = ? AND title = ?", (year, title)
+        ).fetchone()
+        if not r:
+            return False
+        conn.execute("DELETE FROM articles WHERE id = ?", (r["id"],))
+        conn.commit()
+        return True
+
+
+

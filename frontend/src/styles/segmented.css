@@ -1,0 +1,94 @@
+/* ==========================================================================
+   segmented.css — 通用分段控件（SegmentedControl.vue）
+   --------------------------------------------------------------------------
+   全站唯一的模块/视图切换控件样式。切换项数变化无需改样式：
+   指示块宽度由组件按 items.length 动态计算后内联注入。
+   ========================================================================== */
+
+.seg {
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+.seg-tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-soft);
+  padding: 9px 18px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.seg-tab:hover {
+  color: var(--ink);
+}
+
+/* 按下轻微回弹，点击更有实感 */
+.seg-tab:active {
+  transform: scale(0.96);
+}
+
+.seg-tab.on {
+  color: #fff;
+  font-weight: 600;
+}
+
+.seg-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.seg-label {
+  line-height: 1;
+}
+
+/* 滑动指示块：宽度由组件内联注入，位移按自身宽度百分比 */
+.seg-ind {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  height: calc(100% - 6px);
+  background: var(--accent);
+  border-radius: 8px;
+  transition: transform var(--dur-base) var(--ease);
+  pointer-events: none;
+}
+
+/* ===== 手机端：撑满一行，等分更好点 ===== */
+@media (max-width: 768px) {
+  .seg {
+    width: 100%;
+  }
+
+  .seg-tab {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: var(--m-t-meta);
+    gap: 3px;
+  }
+
+  .seg-icon {
+    font-size: 12px;
+  }
+}

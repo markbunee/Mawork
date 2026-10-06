@@ -53,6 +53,15 @@ free_port "$FRONTEND_PORT"
 
 # ---------- 4. 依赖与目录检查 ----------
 cd "$PROJECT_ROOT" || err "项目目录不存在：$PROJECT_ROOT"
+
+# 载入 .env（与 Docker 部署共用同一套凭证/配置）；不存在则跳过
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  set -a
+  . "$PROJECT_ROOT/.env"
+  set +a
+  log ".env 已载入（本地与 Docker 共用凭证）"
+fi
+
 python -c "import fastapi, uvicorn" >/dev/null 2>&1 || {
     warn "缺少后端依赖，正在安装 requirements.txt ..."
     pip install -r backend/requirements.txt || err "依赖安装失败"

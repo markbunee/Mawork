@@ -1,10 +1,38 @@
-/* 全局样式入口：按模块拆分到 styles/ 下同名文件（base/daily/home/resources/articles/accounting/planpool）。
-   修改页面样式请到对应文件；公共部分在 base.css。 */
+/* ==========================================================================
+   main.css — 全局样式入口
+   --------------------------------------------------------------------------
+   引入顺序即层叠顺序，改文件时请保持：
+     1) tokens.css   设计令牌（必须第一，桌面 :root + 移动端覆盖）
+     2) base.css     全局重置 + 桌面端整体布局
+     3) <module>.css 各模块：桌面规则 + 该模块自己的 @media 移动端规则
+     4) mobile.css   移动端外壳与跨模块基建（必须最后，作为移动端兜底层）
+
+   维护约定：
+     - 改配色 / 字号 / 间距 / 圆角 / 阴影 → tokens.css
+     - 改某个模块的样式（含它的移动端表现）→ 只改对应 <module>.css
+     - 改移动端顶栏 / 胶囊 Tab 栏 / 弹层，或跨模块共用的表面与控件 → mobile.css
+   ========================================================================== */
+
+@import './tokens.css';
 @import './base.css';
+
+/* —— 各模块：桌面 + 移动端就近维护 —— */
+@import './login.css';
 @import './daily.css';
+@import './analysis.css';
 @import './home.css';
 @import './resources.css';
 @import './articles.css';
 @import './accounting.css';
 @import './planpool.css';
 @import './timer.css';
+@import './habit.css';
+@import './search.css';
+@import './reminder.css';
+@import './template.css';
+@import './backup.css';
+@import './tag.css';
+@import './user.css';
+
+/* —— 移动端外壳与跨模块基建：最后引入 —— */
+@import './mobile.css';

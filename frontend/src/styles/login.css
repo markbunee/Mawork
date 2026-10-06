@@ -1,0 +1,229 @@
+/* 登录页样式 */
+
+/* ===== 封面背景（小马图） + 表单组件叠加 =====
+   原图 1080x1528 竖版。桌面端横向视口若用 cover 会把竖图拉满导致主体被裁，
+   故采用左右分栏：左侧固定一块接近竖图比例的区域完整展示封面，右侧放表单卡片。 */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 40px clamp(24px, 5vw, 72px);
+  background-color: var(--bg);
+  overflow: hidden;
+}
+
+/* 左侧封面图层 */
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 46%;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(90deg, rgba(27, 25, 23, 0.16) 0%, rgba(27, 25, 23, 0.04) 55%, rgba(27, 25, 23, 0.3) 100%),
+    url('/images/ponnypng.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 封面上的品牌字（压图） */
+.login-page::after {
+  content: 'MaWork';
+  position: absolute;
+  left: clamp(24px, 4vw, 56px);
+  bottom: clamp(28px, 6vh, 64px);
+  z-index: 1;
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(27, 25, 23, 0.5);
+}
+
+/* 表单卡片：实心面 + 强阴影，压在封面图之上，保证可读性 */
+.login-card {
+  position: relative;
+  z-index: 2;
+  width: 360px;
+  max-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 40px 34px 30px;
+  box-shadow: 0 24px 60px rgba(27, 25, 23, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.login-sub {
+  margin: -8px 0 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.login-input {
+  height: 42px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.login-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.login-btn {
+  margin-top: 8px;
+  height: 44px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.login-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-tip {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.6;
+}
+
+/* 模式切换：登录 ⇄ 申请账号 / 重置密码 */
+.login-switch {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.login-switch a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-switch a:hover {
+  text-decoration: underline;
+}
+
+.login-dot {
+  margin: 0 6px;
+  color: var(--line);
+}
+
+/* ===== 手机端（≤768px） ===== */
+@media (max-width: 768px) {
+  .login-page {
+    min-height: 100vh;
+    align-items: flex-end;
+    justify-content: center;
+    padding: calc(28px + env(safe-area-inset-top)) var(--m-pad-x)
+      calc(28px + env(safe-area-inset-bottom));
+    background-color: var(--m-bg);
+    background-image:
+      linear-gradient(180deg, rgba(27, 25, 23, 0.42) 0%, rgba(27, 25, 23, 0.18) 38%, rgba(27, 25, 23, 0.52) 100%),
+      url('/images/ponnypng.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+  /* 手机端取消桌面端分栏；顶部不重复放品牌字（卡片内已有 MaWork） */
+  .login-page::before {
+    display: none;
+  }
+  .login-page::after {
+    display: none;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--m-line-soft);
+    border-radius: 20px;
+    padding: 30px 20px 24px;
+    gap: 14px;
+    box-shadow: 0 20px 48px rgba(27, 25, 23, 0.26);
+  }
+  .login-sub {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    letter-spacing: 2px;
+  }
+  .login-label {
+    font-size: var(--m-t-meta);
+    font-weight: 600;
+    color: var(--m-ink-3);
+  }
+  .login-input {
+    height: 48px;
+    border: 1px solid var(--m-line);
+    border-radius: var(--m-r-ctrl);
+    background: var(--m-surface-2);
+    padding: 0 14px;
+  }
+  .login-input:focus {
+    border-color: var(--m-accent);
+    box-shadow: 0 0 0 3px var(--m-accent-soft);
+  }
+  .login-btn {
+    height: 50px;
+    margin-top: 6px;
+    border-radius: var(--m-r-ctrl);
+    background: var(--m-accent-grad);
+    font-size: 16px;
+    letter-spacing: 4px;
+    box-shadow: var(--m-sh-fab);
+  }
+  .login-tip {
+    font-size: var(--m-t-meta);
+    color: var(--m-ink-3);
+    line-height: 1.7;
+  }
+}

@@ -9,7 +9,8 @@
 设计约定：
 - 计划名(title) 与备注(note) 为所有模式共有；
 - 仅「正计时」会产生 time_logs 耗时记录，供日/周/月统计；
-- 倒计时/倒数日/正数日为计划与提醒，不产生耗时统计。
+- 倒计时/倒数日/正数日为计划与提醒，不产生耗时统计；
+- source_type / source_ref 用于跨模块联动（如日程任务一键开始计时）。
 """
 
 # 计时器类型
@@ -44,14 +45,16 @@ DEFAULT_STATUS = STATUS_ACTIVE
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS timers (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    type            TEXT    NOT NULL DEFAULT 'countup',   -- 四种模式
-    title           TEXT    NOT NULL DEFAULT '',          -- 计划 / 任务名
-    note            TEXT    DEFAULT '',                    -- 备注
-    target_at       TEXT    DEFAULT '',                   -- 倒计时截止时刻 / 倒数日目标日期
-    start_at        TEXT    DEFAULT '',                   -- 正计时起始时刻 / 正数日起始日期
-    status          TEXT    NOT NULL DEFAULT 'active',    -- active / paused / finished
-    running_since   TEXT    DEFAULT '',                   -- 正计时当前计时段起点
-    accumulated_sec INTEGER NOT NULL DEFAULT 0,           -- 正计时累计秒
+    type            TEXT    NOT NULL DEFAULT 'countup',
+    title           TEXT    NOT NULL DEFAULT '',
+    note            TEXT    DEFAULT '',
+    target_at       TEXT    DEFAULT '',
+    start_at        TEXT    DEFAULT '',
+    status          TEXT    NOT NULL DEFAULT 'active',
+    running_since   TEXT    DEFAULT '',
+    accumulated_sec INTEGER NOT NULL DEFAULT 0,
+    source_type     TEXT    NOT NULL DEFAULT '',
+    source_ref      TEXT    NOT NULL DEFAULT '',
     created_at      TEXT    DEFAULT (datetime('now', 'localtime')),
     updated_at      TEXT    DEFAULT (datetime('now', 'localtime'))
 );
@@ -62,15 +65,15 @@ CREATE INDEX IF NOT EXISTS idx_timers_status ON timers(status);
 -- 耗时日志：统计来源（仅正计时产生）
 CREATE TABLE IF NOT EXISTS time_logs (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    timer_id      INTEGER,                               -- 关联 timers.id（可空，预留独立记录）
-    title         TEXT    DEFAULT '',                    -- 冗余任务名，便于无 join 统计
+    timer_id      INTEGER,
+    title         TEXT    DEFAULT '',
     note          TEXT    DEFAULT '',
     start_at      TEXT    DEFAULT '',
     end_at        TEXT    DEFAULT '',
     duration_sec  INTEGER NOT NULL DEFAULT 0,
-    day           TEXT    DEFAULT '',                    -- YYYY-MM-DD 冗余
-    week          TEXT    DEFAULT '',                    -- YYYY-Www   冗余
-    month         TEXT    DEFAULT '',                    -- YYYY-MM    冗余
+    day           TEXT    DEFAULT '',
+    week          TEXT    DEFAULT '',
+    month         TEXT    DEFAULT '',
     created_at    TEXT    DEFAULT (datetime('now', 'localtime'))
 );
 

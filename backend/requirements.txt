@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 pydantic
 openpyxl
+PyJWT==2.14.0
+slowapi
+python-multipart

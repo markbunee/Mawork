@@ -1,5 +1,7 @@
 // 日历文本格 API：每一天是一块可直接输入的文本方格
 
+import { request } from './http'
+
 const BASE = '/api/calday'
 
 export type CalLineKind = 'text' | 'task'
@@ -11,24 +13,14 @@ export interface CalLine {
   kind: CalLineKind
   text: string
   done: boolean
+  /** 前端稳定键：服务端每次保存会重建 id，故用客户端生成的 cid 作为 :key，避免输入中重渲染丢焦点 */
+  cid?: string
 }
 
 export interface CalDayResult {
   date: string
   lines: CalLine[]
   synced: number
-}
-
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(detail || `请求失败：${res.status}`)
-  }
-  return res.json() as Promise<T>
 }
 
 /** 取出区间内每一天的文本行 */

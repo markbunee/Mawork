@@ -114,3 +114,24 @@
 .title-input:focus {
   border-color: var(--accent);
 }
+
+/* ===== 手机端（≤768px）：改为上下堆叠 ===== */
+@media (max-width: 768px) {
+  .articles {
+    flex-direction: column;
+    gap: 14px;
+    height: auto;
+  }
+  .articles-list {
+    width: 100%;
+    max-height: 240px;
+    padding: 6px;
+    overflow-y: auto;
+    background: var(--m-surface);
+    border-radius: var(--m-r-card);
+    box-shadow: var(--m-sh-card);
+  }
+  .title-input {
+    width: 100%;
+  }
+}

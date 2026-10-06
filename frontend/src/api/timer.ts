@@ -1,5 +1,7 @@
 // 计时器 API 封装
 
+import { request } from './http'
+
 const BASE = '/api/timer'
 
 export type TimerType = 'countdown' | 'countup' | 'countdown_days' | 'countup_days'
@@ -15,6 +17,8 @@ export interface Timer {
   status: TimerStatus
   running_since: string
   accumulated_sec: number
+  source_type: string
+  source_ref: string
   created_at: string
   updated_at: string
 }
@@ -23,9 +27,11 @@ export interface TimerIn {
   type: TimerType
   title: string
   note: string
-  target_at: string
-  start_at: string
-  status: TimerStatus
+  target_at?: string
+  start_at?: string
+  status?: TimerStatus
+  source_type?: string
+  source_ref?: string
 }
 
 export interface Bucket {
@@ -53,18 +59,6 @@ export interface Meta {
   status_options: TimerStatus[]
   default_type: TimerType
   default_status: TimerStatus
-}
-
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(detail || `请求失败：${res.status}`)
-  }
-  return res.json() as Promise<T>
 }
 
 export function getMeta(): Promise<Meta> {
